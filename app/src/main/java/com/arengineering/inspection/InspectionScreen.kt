@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -43,6 +44,8 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
@@ -61,7 +64,12 @@ private val Muted = Color(0xFFC1D5D6)
 private val PanelShape = RoundedCornerShape(18.dp)
 
 @Composable
-internal fun InspectionScreen(preview: ArPreview, issue: StartupIssue?, onStartupAction: () -> Unit) {
+internal fun InspectionScreen(
+    preview: ArPreview,
+    issue: StartupIssue?,
+    onStartupAction: () -> Unit,
+    onOpenTerminal: () -> Unit,
+) {
     val hud = preview.hud.collectAsState()
     val status by remember(hud) { derivedStateOf { hud.value.status } }
     val hasAnchor by remember(hud) { derivedStateOf { hud.value.hasAnchor } }
@@ -78,11 +86,12 @@ internal fun InspectionScreen(preview: ArPreview, issue: StartupIssue?, onStartu
                 )
                 TrackingGraphics(preview, hud)
                 Box(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing).padding(16.dp)) {
-                    InspectionHeader(status, Modifier.align(Alignment.TopCenter))
+                    InspectionHeader(status, onOpenTerminal, Modifier.align(Alignment.TopCenter))
                     TrackingPanel(status, hasAnchor, preview::clearMarker, Modifier.align(Alignment.BottomCenter))
                 }
             } else {
                 Box(Modifier.fillMaxSize().background(Night).windowInsetsPadding(WindowInsets.safeDrawing)) {
+                    TerminalButton(onOpenTerminal, Modifier.align(Alignment.TopEnd).padding(16.dp))
                     Column(
                         Modifier.align(Alignment.Center).widthIn(max = 420.dp).padding(24.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -100,11 +109,11 @@ internal fun InspectionScreen(preview: ArPreview, issue: StartupIssue?, onStartu
 }
 
 @Composable
-private fun InspectionHeader(status: HudStatus, modifier: Modifier) {
+private fun InspectionHeader(status: HudStatus, onOpenTerminal: () -> Unit, modifier: Modifier) {
     val active = status == HudStatus.READY || status == HudStatus.PLACED || status == HudStatus.MISSED
     Row(
         modifier.widthIn(max = 520.dp).fillMaxWidth().background(Glass, CircleShape)
-            .border(1.dp, Cyan.copy(alpha = 0.32f), CircleShape).padding(horizontal = 18.dp, vertical = 10.dp),
+            .border(1.dp, Cyan.copy(alpha = 0.32f), CircleShape).padding(start = 18.dp, end = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -112,7 +121,16 @@ private fun InspectionHeader(status: HudStatus, modifier: Modifier) {
         Row(horizontalArrangement = Arrangement.spacedBy(7.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(7.dp).background(if (active) Cyan else Amber, CircleShape))
             Text(stringResource(R.string.tracking_status), color = Muted, style = MaterialTheme.typography.labelLarge)
+            TerminalButton(onOpenTerminal)
         }
+    }
+}
+
+@Composable
+private fun TerminalButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val description = stringResource(R.string.telemetry_terminal_title)
+    IconButton(onClick = onClick, modifier = modifier.semantics { contentDescription = description }) {
+        Text("?", color = Cyan, fontSize = 22.sp)
     }
 }
 

@@ -13,6 +13,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import com.google.ar.core.ArCoreApk
 import com.google.ar.core.Config
@@ -58,7 +60,18 @@ class MainActivity : ComponentActivity() {
             }
         }
         setContent {
-            InspectionScreen(preview, issue, onStartupAction = ::handleStartupAction)
+            var terminalOpen by rememberSaveable { mutableStateOf(false) }
+            val terminalServer = remember { TerminalServer() }
+            InspectionScreen(
+                preview,
+                issue,
+                onStartupAction = ::handleStartupAction,
+                onOpenTerminal = { terminalOpen = true },
+            )
+            if (terminalOpen) {
+                val database = (application as InspectionApplication).telemetryDatabase
+                TelemetryTerminal(database.telemetry(), terminalServer, onDismiss = { terminalOpen = false })
+            }
         }
     }
 

@@ -1,0 +1,21 @@
+<resources>
+    <string name="telemetry_terminal_title">Терминал</string>
+    <string name="telemetry_terminal_close">Закрыть</string>
+    <string name="telemetry_terminal_hint">pasport — местные показания или паспорт с сервера\nserver http://192.168.1.10:8000 — адрес ноутбука\nhealth — связь с сервером\nlogin почта — вход\nwatch 1 — обновлять паспорт насоса\nchecks 1 — узлы и шаги осмотра\nsavecheck 1 1 no_visible_issue — сохранить результат\nreport 1 — прочитать отчёт по ID\nlogout — выйти\nlocal — вернуться к базе на телефоне</string>
+    <string name="telemetry_command">Команда</string>
+    <string name="telemetry_run_command">Выполнить</string>
+    <string name="telemetry_unknown_command">Проверьте команду и её параметры. Список команд — help.</string>
+    <string name="telemetry_server_address_hint">Введите server и адрес ноутбука, например server http://192.168.1.10:8000.</string>
+    <string name="telemetry_server_login_hint">Введите login и почту. Пароль вводится следующим шагом.</string>
+    <string name="telemetry_server_check_hint">Формат команды: savecheck ID_оборудования ID_проверки результат</string>
+    <string name="telemetry_server_password">Пароль</string>
+    <string name="telemetry_server_waiting">Запрос к серверу…</string>
+    <string name="telemetry_server_unauthorized">Проверьте учётные данные или войдите снова командой login.</string>
+    <string name="telemetry_server_unreachable">Не удалось получить ответ. Проверьте адрес ноутбука, общий Wi-Fi и запуск сервера.</string>
+    <string name="telemetry_server_invalid_response">Сервер вернул ответ в неожиданном формате.</string>
+    <string name="telemetry_passport">Паспорт оборудования №%1$s\nЦентробежный насос\nТелеметрия dbLoop · деморежим</string>
+    <string name="telemetry_waiting">Ожидаем первый замер.</string>
+    <string name="telemetry_sample_time">Запись из базы: %1$s\nОбновлено на устройстве: %2$s</string>
+    <string name="telemetry_vibration">ВИБРАЦИЯ\nОбороты: %1$d об/мин\nСКЗ: %2$.2f мм/с · уставка не задана\n1×: %3$.2f мм/с\nПред. &gt;2,8 / тревога &gt;4,5 мм/с\n2×: %4$.2f мм/с\nПред. &gt;1,8 / тревога &gt;3,0 мм/с\nВЧ шум: %5$.2f g · пред. &gt;2,5 g\nДиагноз из базы: %6$s</string>
+    <string name="telemetry_temperature">ТЕМПЕРАТУРА\nПодшипник насоса: %1$.1f °C\nНорма ≈50 · пред. &gt;75 · тревога &gt;90 °C\nОбмотки ЭД: %2$.1f °C\nНорма ≈65 · пред. &gt;90 · тревога &gt;110 °C\nДиагноз из базы: %3$s</string>
+</resources>
