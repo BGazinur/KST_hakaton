@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AR Engineering</string>
+    <string name="inspection">Осмотр</string>
+    <string name="marker_label">Метка осмотра</string>
+    <string name="clear_marker">Убрать метку</string>
+    <string name="tracking_status">Трекинг</string>
+    <string name="tracking_wait">Поиск поверхности</string>
+    <string name="tracking_hint_wait">Плавно перемещайте телефон, чтобы камера увидела поверхность под разными углами.</string>
+    <string name="tracking_ready">Трекинг активен</string>
+    <string name="tracking_hint_ready">Коснитесь видимой детали, чтобы поставить метку на её поверхность.</string>
+    <string name="tracking_anchored">Метка закреплена</string>
+    <string name="tracking_hint_anchored">Смените ракурс. Стрелка должна указывать на ту же точку детали.</string>
+    <string name="tracking_missed">Точка не найдена</string>
+    <string name="tracking_hint_missed">Немного сместите телефон вбок и коснитесь участка с заметной текстурой.</string>
+    <string name="tracking_paused">Восстанавливаем трекинг</string>
+    <string name="tracking_hint_paused">Верните в кадр знакомый участок и удерживайте телефон устойчиво.</string>
+    <string name="tracking_lost">Метка потеряна</string>
+    <string name="tracking_hint_lost">Коснитесь детали, чтобы снова поставить метку.</string>
+    <string name="tracking_dark">Мало света</string>
+    <string name="tracking_hint_dark">Осветите деталь, чтобы камера могла различить её поверхность.</string>
+    <string name="tracking_motion">Слишком быстрое движение</string>
+    <string name="tracking_hint_motion">Перемещайте телефон медленнее.</string>
+    <string name="tracking_texture">Мало деталей в кадре</string>
+    <string name="tracking_hint_texture">Наведите камеру на участок с заметными краями или текстурой.</string>
+    <string name="camera_permission">Разрешите доступ к камере</string>
+    <string name="camera_permission_hint">Камера нужна для изображения и определения положения телефона.</string>
+    <string name="camera_permission_action">Разрешить камеру</string>
+    <string name="camera_settings_action">Открыть настройки</string>
+    <string name="ar_installing">Настройка ARCore</string>
+    <string name="ar_installing_hint">Завершите установку Google Play Services для AR.</string>
+    <string name="ar_install_needed">Требуется ARCore</string>
+    <string name="ar_install_needed_hint">Установите или обновите Google Play Services для AR.</string>
+    <string name="ar_install_action">Продолжить установку</string>
+    <string name="ar_unsupported">ARCore недоступен</string>
+    <string name="ar_unsupported_hint">Для пространственных меток нужен смартфон с поддержкой ARCore.</string>
+    <string name="ar_update_app">Требуется обновление приложения</string>
+    <string name="ar_update_app_hint">Установите сборку, совместимую с версией ARCore на телефоне.</string>
+    <string name="camera_busy">Камера недоступна</string>
+    <string name="camera_busy_hint">Закройте другие приложения, использующие камеру, и повторите запуск.</string>
+    <string name="ar_error">Не удалось запустить осмотр</string>
+    <string name="ar_error_hint">Попробуйте заново открыть камеру.</string>
+    <string name="retry">Повторить</string>
+</resources>
