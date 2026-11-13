@@ -1,0 +1,153 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 2,
+    "identityHash": "4c6004cf977593356ed6dba6fdeed167",
+    "entities": [
+      {
+        "tableName": "vibration_readings",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`equipment_id` TEXT NOT NULL, `measured_at` TEXT NOT NULL, `speed_rpm` INTEGER NOT NULL, `overall_rms_mm_s` REAL NOT NULL, `amplitude_1x_mm_s` REAL NOT NULL, `amplitude_2x_mm_s` REAL NOT NULL, `hf_noise_g` REAL NOT NULL, `source_diagnosis` TEXT NOT NULL, PRIMARY KEY(`equipment_id`, `measured_at`))",
+        "fields": [
+          {
+            "fieldPath": "equipmentId",
+            "columnName": "equipment_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "measuredAt",
+            "columnName": "measured_at",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "speedRpm",
+            "columnName": "speed_rpm",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "overallRmsMmPerSecond",
+            "columnName": "overall_rms_mm_s",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "amplitude1xMmPerSecond",
+            "columnName": "amplitude_1x_mm_s",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "amplitude2xMmPerSecond",
+            "columnName": "amplitude_2x_mm_s",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "highFrequencyNoiseG",
+            "columnName": "hf_noise_g",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sourceDiagnosis",
+            "columnName": "source_diagnosis",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "equipment_id",
+            "measured_at"
+          ]
+        }
+      },
+      {
+        "tableName": "temperature_readings",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`equipment_id` TEXT NOT NULL, `measured_at` TEXT NOT NULL, `speed_rpm` INTEGER NOT NULL, `pump_bearing_c` REAL NOT NULL, `motor_winding_c` REAL NOT NULL, `source_diagnosis` TEXT NOT NULL, PRIMARY KEY(`equipment_id`, `measured_at`))",
+        "fields": [
+          {
+            "fieldPath": "equipmentId",
+            "columnName": "equipment_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "measuredAt",
+            "columnName": "measured_at",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "speedRpm",
+            "columnName": "speed_rpm",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pumpBearingCelsius",
+            "columnName": "pump_bearing_c",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "motorWindingCelsius",
+            "columnName": "motor_winding_c",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sourceDiagnosis",
+            "columnName": "source_diagnosis",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "equipment_id",
+            "measured_at"
+          ]
+        }
+      },
+      {
+        "tableName": "current_equipment_samples",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`equipment_id` TEXT NOT NULL, `measured_at` TEXT NOT NULL, `updated_at_ms` INTEGER NOT NULL, PRIMARY KEY(`equipment_id`))",
+        "fields": [
+          {
+            "fieldPath": "equipmentId",
+            "columnName": "equipment_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "measuredAt",
+            "columnName": "measured_at",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAtMillis",
+            "columnName": "updated_at_ms",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "equipment_id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4c6004cf977593356ed6dba6fdeed167')"
+    ]
+  }
+}
