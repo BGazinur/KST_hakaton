@@ -190,6 +190,8 @@ CREATE TABLE IF NOT EXISTS equipment_tests (
     outcome TEXT NOT NULL CHECK (outcome IN ('pass', 'fail', 'inconclusive')),
     details TEXT NOT NULL DEFAULT '',
     protocol_document_id INTEGER REFERENCES documents(id),
+    certificate_number TEXT,
+    uploaded_by INTEGER REFERENCES users(id),
     FOREIGN KEY (equipment_id, sensor_code) REFERENCES sensors(equipment_id, code)
 );
 CREATE INDEX IF NOT EXISTS equipment_tests_equipment ON equipment_tests(equipment_id, performed_at);
@@ -202,6 +204,7 @@ CREATE TABLE IF NOT EXISTS reports (
     notes TEXT NOT NULL DEFAULT '',
     equipment_snapshot TEXT NOT NULL CHECK (json_valid(equipment_snapshot)),
     telemetry_snapshot TEXT CHECK (telemetry_snapshot IS NULL OR json_valid(telemetry_snapshot)),
+    sensors_snapshot TEXT NOT NULL DEFAULT '[]' CHECK (json_valid(sensors_snapshot)),
     UNIQUE (id, equipment_id)
 );
 CREATE INDEX IF NOT EXISTS reports_equipment ON reports(equipment_id, created_at);

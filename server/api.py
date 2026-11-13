@@ -1,12 +1,13 @@
 import asyncio
 import json
 from contextlib import asynccontextmanager, suppress
+from datetime import date
 from itertools import cycle
 from typing import Annotated, Literal
 from urllib.parse import quote
 
 from email_validator import EmailNotValidError
-from fastapi import Depends, FastAPI, HTTPException, Query, Request, Response
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, Request, Response, UploadFile
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -14,7 +15,8 @@ from pydantic import BaseModel, Field, SecretStr
 
 from .auth import SESSION_SECONDS, authenticate, normalize_email, session_user, token_hash
 from .database import DEMO_PUMP, connect, db_path, initialize, set_current, utc_now
-from .passport import decode, get_passport, rows
+from .passport import decode, get_passport, rows, sensor_status
+from .report_exports import EXPORT_TYPES, make_pdf, make_xlsx
 
 
 def replay_ids(path):
@@ -188,6 +190,88 @@ def download(content, filename, content_type):
     })
 
 
+def read_upload(file, limit, signatures):
+    content = file.file.read(limit + 1)
+    if len(content) > limit:
+        raise HTTPException(413, f"Файл больше {limit // (1024 * 1024)} МБ.")
+    for signature, content_type in signatures:
+        if content.startswith(signature):
+            filename = (file.filename or "document").replace("\\", "/").rsplit("/", 1)[-1].strip()
+            return filename[:255] or "document", content_type, content
+    raise HTTPException(422, "Формат файла не поддерживается.")
+
+
+@app.post("/equipment/{equipment_id}/verifications", status_code=201)
+def add_verification(
+    equipment_id: int,
+    request: Request,
+    user: User,
+    sensor_code: Annotated[str, Form(min_length=1, max_length=100)],
+    title: Annotated[str, Form(min_length=1, max_length=254)],
+    performed_at: Annotated[date, Form()],
+    outcome: Annotated[Literal["pass", "fail", "inconclusive"], Form()],
+    valid_until: Annotated[date | None, Form()] = None,
+    certificate_number: Annotated[str | None, Form(max_length=100)] = None,
+    details: Annotated[str, Form(max_length=4000)] = "",
+    protocol: Annotated[UploadFile | None, File()] = None,
+):
+    if user["role"] not in ("supervisor", "admin"):
+        raise HTTPException(403, "Загружать поверки могут мастер и администратор.")
+    if not title.strip():
+        raise HTTPException(422, "Укажите название поверки.")
+    if valid_until is not None and (valid_until < performed_at or outcome != "pass"):
+        raise HTTPException(422, "Срок действия указывается для успешной поверки и не может быть раньше даты поверки.")
+    upload = read_upload(protocol, 10 * 1024 * 1024, ((b"%PDF-", "application/pdf"),)) if protocol else None
+    with connect(request.app.state.db_path) as db:
+        db.execute("BEGIN IMMEDIATE")
+        if db.execute("SELECT 1 FROM equipment WHERE id = ?", (equipment_id,)).fetchone() is None:
+            raise HTTPException(404, "Оборудование не найдено.")
+        if db.execute(
+            "SELECT 1 FROM sensors WHERE equipment_id = ? AND code = ?", (equipment_id, sensor_code)
+        ).fetchone() is None:
+            raise HTTPException(422, "Датчик не относится к этому оборудованию.")
+
+        document_id = None
+        if upload:
+            document_id = db.execute(
+                """
+                INSERT INTO documents (equipment_id, kind, title, filename, content_type, content)
+                VALUES (?, 'test_protocol', ?, ?, ?, ?)
+                """,
+                (equipment_id, title.strip(), *upload),
+            ).lastrowid
+        verification_id = db.execute(
+            """
+            INSERT INTO equipment_tests (
+                equipment_id, sensor_code, kind, title, performed_at, valid_until, outcome,
+                details, protocol_document_id, certificate_number, uploaded_by
+            ) VALUES (?, ?, 'metrological_verification', ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                equipment_id, sensor_code, title.strip(), performed_at.isoformat(),
+                valid_until.isoformat() if valid_until else None, outcome, details,
+                document_id, (certificate_number or "").strip() or None, user["id"],
+            ),
+        ).lastrowid
+        return dict(db.execute("SELECT * FROM equipment_tests WHERE id = ?", (verification_id,)).fetchone())
+
+
+@app.get("/equipment/{equipment_id}/verifications")
+def verifications(equipment_id: int, request: Request, user: User):
+    with connect(request.app.state.db_path) as db:
+        if db.execute("SELECT 1 FROM equipment WHERE id = ?", (equipment_id,)).fetchone() is None:
+            raise HTTPException(404, "Оборудование не найдено.")
+        return rows(
+            db,
+            """
+            SELECT * FROM equipment_tests
+            WHERE equipment_id = ? AND kind = 'metrological_verification'
+            ORDER BY performed_at DESC, id DESC
+            """,
+            (equipment_id,),
+        )
+
+
 @app.get("/defect-types")
 def defect_types(request: Request, user: User):
     with connect(request.app.state.db_path) as db:
@@ -223,14 +307,16 @@ def create_report(data: ReportInput, request: Request, user: User):
                 raise HTTPException(422, "Замер не относится к этому оборудованию.")
             telemetry = dict(sample)
 
+        sensors = [sensor_status(sensor, telemetry) for sensor in snapshot["sensors"]]
+
         report_id = db.execute(
             """
             INSERT INTO reports (
-                equipment_id, author_id, created_at, notes, equipment_snapshot, telemetry_snapshot
-            ) VALUES (?, ?, ?, ?, ?, ?)
+                equipment_id, author_id, created_at, notes, equipment_snapshot, telemetry_snapshot, sensors_snapshot
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
             (data.equipment_id, user["id"], utc_now(), data.notes,
-             encode(snapshot["equipment"]), encode(telemetry) if telemetry is not None else None),
+             encode(snapshot["equipment"]), encode(telemetry) if telemetry is not None else None, encode(sensors)),
         ).lastrowid
         db.executemany(
             """
@@ -281,7 +367,7 @@ def report_row(db, report_id, user):
 
 
 def read_report(db, report_id, user):
-    result = decode(report_row(db, report_id, user), "equipment_snapshot", "telemetry_snapshot")
+    result = decode(report_row(db, report_id, user), "equipment_snapshot", "telemetry_snapshot", "sensors_snapshot")
     result["items"] = [
         decode(item, "check_snapshot")
         for item in db.execute(
@@ -292,4 +378,57 @@ def read_report(db, report_id, user):
             (report_id,),
         )
     ]
+    result["attachments"] = rows(
+        db, "SELECT id, kind, check_id, filename, content_type FROM report_attachments WHERE report_id = ? ORDER BY id",
+        (report_id,),
+    )
     return result
+
+
+@app.post("/reports/{report_id}/photos", status_code=201)
+def add_report_photo(
+    report_id: int,
+    request: Request,
+    user: User,
+    photo: Annotated[UploadFile, File()],
+    check_id: Annotated[int | None, Form(gt=0)] = None,
+):
+    with connect(request.app.state.db_path) as db:
+        report_row(db, report_id, user)
+        upload = read_upload(
+            photo, 5 * 1024 * 1024, ((b"\xff\xd8\xff", "image/jpeg"), (b"\x89PNG\r\n\x1a\n", "image/png"))
+        )
+        if check_id is not None and db.execute(
+            "SELECT 1 FROM report_items WHERE report_id = ? AND check_id = ?", (report_id, check_id)
+        ).fetchone() is None:
+            raise HTTPException(422, "Этого шага нет в отчёте.")
+        attachment_id = db.execute(
+            """
+            INSERT INTO report_attachments (report_id, check_id, kind, filename, content_type, content)
+            VALUES (?, ?, 'photo', ?, ?, ?)
+            """,
+            (report_id, check_id, *upload),
+        ).lastrowid
+        return {"id": attachment_id}
+
+
+@app.get("/reports/{report_id}/attachments/{attachment_id}")
+def report_attachment(report_id: int, attachment_id: int, request: Request, user: User):
+    with connect(request.app.state.db_path) as db:
+        report_row(db, report_id, user)
+        row = db.execute(
+            "SELECT filename, content_type, content FROM report_attachments WHERE report_id = ? AND id = ?",
+            (report_id, attachment_id),
+        ).fetchone()
+    if row is None:
+        raise HTTPException(404, "Вложение не найдено.")
+    return download(row["content"], row["filename"], row["content_type"])
+
+
+@app.get("/reports/{report_id}/export/{file_format}")
+def export_report(report_id: int, file_format: Literal["pdf", "xlsx"], request: Request, user: User):
+    with connect(request.app.state.db_path) as db:
+        db.execute("BEGIN")
+        result = read_report(db, report_id, user)
+    content = make_pdf(result) if file_format == "pdf" else make_xlsx(result)
+    return download(content, f"inspection-{report_id}.{file_format}", EXPORT_TYPES[file_format])
