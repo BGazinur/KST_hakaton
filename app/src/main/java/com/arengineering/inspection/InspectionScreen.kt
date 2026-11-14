@@ -65,6 +65,7 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.arengineering.inspection.cv.CvStatus
 
 private val LogoBlue = Color(0xFF125AA6)
 internal val SkyBlue = Color(0xFF8BBFFF)
@@ -136,6 +137,8 @@ private fun CameraHud(
     var section by rememberSaveable { mutableStateOf<InspectionSection?>(null) }
     var manual by rememberSaveable { mutableStateOf(false) }
     val hud = preview?.hud?.collectAsState()
+    val analysis = preview?.cameraAnalysis?.collectAsState()?.value
+        ?.takeIf { it.target == state.cameraAnalysisTarget() }
     val status by remember(hud) { derivedStateOf { hud?.value?.status } }
     val hasAnchor by remember(hud) { derivedStateOf { hud?.value?.hasAnchor == true } }
     val stage = state.stage
@@ -166,7 +169,7 @@ private fun CameraHud(
         }
         InspectionGraphics(
             hud = hud.takeIf { issue == null },
-            overlay = state.overlay,
+            overlay = if (state.isDemo) state.overlay else analysis?.overlay ?: InspectionOverlay(),
             qrGuide = issue == null && stage is InspectionStage.ScanQr && !manualMode,
             manualPreview = preview.takeIf { manualMode },
         )
@@ -232,7 +235,7 @@ private fun CameraHud(
                         manual = false
                     }) { Text(stringResource(R.string.back_to_inspection)) }
                 } else {
-                    StageContent(state, status, onAction, openSection)
+                    StageContent(state, status, onAction, openSection, analysis?.status)
                     if (state.isDemo && stage is InspectionStage.ScanQr && issue == null) {
                         TextButton(onClick = { manual = true }) { Text(stringResource(R.string.manual_marker)) }
                     }
@@ -317,11 +320,13 @@ private fun StageContent(
     status: HudStatus?,
     onAction: (InspectionAction) -> Unit,
     open: (InspectionSection) -> Unit,
+    cvStatus: CvStatus?,
 ) {
     when (val stage = state.stage) {
         is InspectionStage.ScanQr -> {
-            PanelTitle(stringResource(if (state.isDemo) R.string.scan_qr else R.string.equipment_picker))
-            if (!state.isDemo) PanelText(stringResource(R.string.inspection_manual_hint))
+            PanelTitle(stringResource(R.string.scan_qr))
+            if (!state.isDemo) PanelText(stringResource(R.string.cv_scan_hint))
+            if (stage.lookingUp) LoadingLabel(R.string.loading)
             stage.error?.let {
                 ErrorText(it)
                 OutlinedButton(onClick = { onAction(InspectionAction.ScanAgain) }) { Text(stringResource(R.string.retry)) }
@@ -375,7 +380,19 @@ private fun StageContent(
         }
         InspectionStage.FindPump -> {
             PanelTitle(stringResource(R.string.find_pump))
-            if (state.isDemo) ActionButton(R.string.demo_find_pump) { onAction(InspectionAction.DemoFindPump) }
+            if (state.isDemo) {
+                ActionButton(R.string.demo_find_pump) { onAction(InspectionAction.DemoFindPump) }
+            } else {
+                val message = when (cvStatus) {
+                    CvStatus.EQUIPMENT_FOUND -> R.string.cv_pump_found
+                    CvStatus.AMBIGUOUS -> R.string.cv_pump_ambiguous
+                    else -> R.string.cv_pump_hint
+                }
+                PanelText(stringResource(message))
+                ActionButton(
+                    if (cvStatus == CvStatus.EQUIPMENT_FOUND) R.string.cv_confirm_pump else R.string.cv_manual_continue,
+                ) { onAction(InspectionAction.ConfirmPump) }
+            }
         }
         is InspectionStage.InspectNode -> NodePanel(stage, status, state.isDemo, onAction)
         is InspectionStage.Summary -> ReportPanel(stage, onAction)
@@ -398,6 +415,14 @@ private fun NodePanel(
     if (result == null) {
         PanelText(stage.step.instruction)
         stage.guidance?.let { PanelText(it, Amber) }
+        if (stage.scanCorrosion) {
+            val confidence = stage.corrosionConfidence
+            PanelText(
+                if (confidence == null) stringResource(R.string.cv_corrosion_hint)
+                else stringResource(R.string.cv_corrosion_candidate, formatConfidence(confidence)),
+                if (confidence == null) Muted else Amber,
+            )
+        }
         if (status != null && !status.canProject) {
             PanelText(stringResource(trackingHint(status)), Amber)
         }

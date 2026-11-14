@@ -1,0 +1,3 @@
+// Добавить в dependencies модуля cv (в полном пакете уже добавлено):
+implementation("com.google.mlkit:barcode-scanning:17.3.0")
+implementation("com.google.mlkit:text-recognition:16.0.1")

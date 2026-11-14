@@ -1,0 +1,232 @@
+"""Independent NumPy/ONNX Runtime 1.23.2 fixtures for the Kotlin CPU handoff.
+
+Run with the project's Python and PYTHONPATH=work/android_handoff_qa/python_deps.
+Only small, fixed offline fixtures are embedded; this is numerical parity, not an accuracy test.
+"""
+from __future__ import annotations
+import hashlib
+import json
+from pathlib import Path
+import zipfile
+import numpy as np
+from PIL import Image
+import onnxruntime as ort
+
+ROOT = Path(__file__).resolve().parents[2]
+DEST = ROOT / "work/android_handoff/android/src/test/resources/parity"
+MODELS = ROOT / "outputs/pump-mobile"
+SPECS = [
+    # Odd dimensions retain the source aspect ratio to within one pixel.
+    ("pump90", "work/pump_real/seg/images/test/commons_03_00.jpg", (319, 213), 90, "OVERVIEW"),
+    ("pump270", "work/pump_real/seg/images/test/commons_07_00.jpg", (641, 481), 270, "OVERVIEW"),
+    ("rust0", "work/pump_holdout/6bd1015378aa4382aedc45fe4b7adda4.png", (315, 211), 0, "DETAIL_RUST"),
+]
+
+
+def preprocess(raw, rotation):
+    upright = np.rot90(raw, k=-(rotation // 90))
+    h, w = upright.shape[:2]
+    rh, rw = raw.shape[:2]
+    gain = min(416 / w, 416 / h)
+    nw, nh = round(w * gain), round(h * gain)
+    left, top = (416 - nw) // 2, (416 - nh) // 2
+    xs = np.clip((np.arange(nw) + .5) * w / nw - .5, 0, w - 1)
+    ys = np.clip((np.arange(nh) + .5) * h / nh - .5, 0, h - 1)
+    x0, y0 = np.floor(xs).astype(int), np.floor(ys).astype(int)
+    x1, y1 = np.minimum(x0 + 1, w - 1), np.minimum(y0 + 1, h - 1)
+    fx, fy = (xs - x0)[None, :, None], (ys - y0)[:, None, None]
+    upper = upright[y0[:, None], x0] * (1 - fx) + upright[y0[:, None], x1] * fx
+    lower = upright[y1[:, None], x0] * (1 - fx) + upright[y1[:, None], x1] * fx
+    resized = np.clip(np.floor(upper * (1 - fy) + lower * fy + .5), 0, 255).astype(np.uint8)
+    padded = np.full((416, 416, 3), 114, dtype=np.uint8)
+    padded[top:top + nh, left:left + nw] = resized
+    chw = np.ascontiguousarray(padded.transpose(2, 0, 1), dtype=np.float32) / np.float32(255)
+    rotation_matrix = {
+        0: [[rw, 0, 0], [0, rh, 0], [0, 0, 1]],
+        90: [[0, -rh, rh], [rw, 0, 0], [0, 0, 1]],
+        180: [[-rw, 0, rw], [0, -rh, rh], [0, 0, 1]],
+        270: [[0, rh, 0], [-rw, 0, rw], [0, 0, 1]],
+    }[rotation]
+    matrix = np.array([[nw / w, 0, left], [0, nh / h, top], [0, 0, 1]]) @ rotation_matrix
+    return chw, matrix
+
+
+def iou(a, b):
+    wh = np.maximum(0, np.minimum(a[2:], b[2:]) - np.maximum(a[:2], b[:2]))
+    intersection = np.prod(wh)
+    union = np.prod(np.maximum(0, a[2:] - a[:2])) + np.prod(np.maximum(0, b[2:] - b[:2])) - intersection
+    return float(intersection / union) if union > 0 else 0.0
+
+
+def nms(head, threshold):
+    scores = head[4].astype(np.float64)
+    candidates = np.flatnonzero(np.isfinite(scores) & (scores >= float(np.float32(threshold))) & (scores <= 1))
+    # Recompute in float64 to match coordinates, not float32 cancellation at the bbox edge.
+    xywh = head[:4].T.astype(np.float64)
+    boxes = np.concatenate([xywh[:, :2] - xywh[:, 2:] / 2, xywh[:, :2] + xywh[:, 2:] / 2], axis=1)
+    order = sorted(candidates.tolist(), key=lambda i: (-scores[i], i))
+    keep = []
+    for index in order:
+        if not np.isfinite(boxes[index]).all() or (xywh[index, 2:] <= 0).any():
+            continue
+        if all(iou(boxes[index], boxes[k]) <= .70 for k in keep):
+            keep.append(index)
+            if len(keep) == 10:
+                break
+    return [(i, float(scores[i]), boxes[i]) for i in keep]
+
+
+def raw_box(box, inverse):
+    corners = np.array([[box[0], box[1], 1], [box[2], box[1], 1],
+                        [box[2], box[3], 1], [box[0], box[3], 1]]) @ inverse.T
+    return np.clip(np.r_[corners[:, :2].min(axis=0), corners[:, :2].max(axis=0)], 0, 1)
+
+
+def mask_reference(head, proto, index, box, matrix, width, height):
+    logits = np.einsum("c,chw->hw", head[5:, index], proto, dtype=np.float32, optimize=False)
+    scale = min(1, 256 / max(width, height))
+    mw, mh = max(1, round(width * scale)), max(1, round(height * scale))
+    yy, xx = np.mgrid[:mh, :mw]
+    raw = np.stack([(xx + .5) / mw, (yy + .5) / mh, np.ones_like(xx)], axis=-1)
+    model = raw @ matrix.T
+    px = np.clip(model[..., 0] / 4 - .5, 0, 103)
+    py = np.clip(model[..., 1] / 4 - .5, 0, 103)
+    x0, y0 = np.floor(px).astype(int), np.floor(py).astype(int)
+    x1, y1 = np.minimum(x0 + 1, 103), np.minimum(y0 + 1, 103)
+    dx, dy = px - x0, py - y0
+    top = logits[y0, x0] * (1 - dx) + logits[y0, x1] * dx
+    bottom = logits[y1, x0] * (1 - dx) + logits[y1, x1] * dx
+    inside = (model[..., 0] >= box[0]) & (model[..., 0] < box[2]) & (model[..., 1] >= box[1]) & (model[..., 1] < box[3])
+    return ((top * (1 - dy) + bottom * dy > 0) & inside).astype(np.uint8)
+
+
+def decode(outputs, matrix, width, height, pose=False):
+    inverse = np.linalg.inv(matrix)
+    head = outputs[0][0]
+    found = []
+    for index, score, box in nms(head, .30 if pose else .35):
+        bbox = raw_box(box, inverse)
+        if np.prod(np.maximum(bbox[2:] - bbox[:2], 0)) <= 0:
+            continue
+        item = dict(index=index, confidence=score, bbox=bbox)
+        if pose:
+            points = []
+            for k, name in enumerate(["FRAME", "CASING", "TERMINAL_BOX"]):
+                x, y, confidence = head[5 + 3 * k:8 + 3 * k, index].astype(np.float64)
+                point = inverse @ [x, y, 1]
+                if float(np.float32(.65)) <= confidence <= 1 and np.isfinite(point).all() and ((0 <= point[:2]) & (point[:2] <= 1)).all():
+                    points.append(dict(id=name, point=point[:2], confidence=float(confidence)))
+            item["keypoints"] = points
+        else:
+            item["mask"] = mask_reference(head, outputs[1][0], index, box, matrix, width, height)
+        found.append(item)
+    return found
+
+
+def zones_reference(equipment, poses):
+    zones = []
+    if len(equipment) != 1:
+        return zones
+    pump = equipment[0]
+    matches = [(iou(pump["bbox"], p["bbox"]), p) for p in poses]
+    matches = [m for m in matches if m[0] >= .55]
+    if not matches:
+        return zones
+    pose = max(matches, key=lambda m: m[0])[1]
+    mask = pump["mask"]
+    height, width = mask.shape
+    radius = .012 * max(width, height)
+    for kp in pose["keypoints"]:
+        px, py = kp["point"]
+        box = pump["bbox"]
+        if not (box[0] <= px <= box[2] and box[1] <= py <= box[3]):
+            continue
+        x, y = min(int(px * width), width - 1), min(int(py * height), height - 1)
+        yy, xx = np.ogrid[:height, :width]
+        if np.any(mask & ((xx - x) ** 2 + (yy - y) ** 2 <= radius ** 2)):
+            zones.append(kp | {"equipmentId": f'equipment-{pump["index"]}'})
+    return zones
+
+
+def csv(values):
+    return ",".join(format(float(v), ".17g") for v in values)
+
+
+def main():
+    assert ort.__version__ == "1.23.2", f"Expected ORT 1.23.2, got {ort.__version__}; use isolated python_deps"
+    DEST.mkdir(parents=True, exist_ok=True)
+    sessions = {}
+    for model in ["pump-seg", "pump-pose", "corrosion"]:
+        options = ort.SessionOptions()
+        options.intra_op_num_threads = 2
+        options.inter_op_num_threads = 1
+        options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+        sessions[model] = ort.InferenceSession(str(MODELS / f"{model}.onnx"), sess_options=options, providers=["CPUExecutionProvider"])
+    report = {"ort": ort.__version__, "purpose": "Numerical parity only, not accuracy/performance evaluation", "fixtures": []}
+    for name, source, size, rotation, mode in SPECS:
+        upright = np.array(Image.open(ROOT / source).convert("RGB").resize(size, Image.Resampling.LANCZOS))
+        # Simulated raw camera orientation: the preprocessor must undo this rotation.
+        raw = np.ascontiguousarray(np.rot90(upright, k=rotation // 90))
+        height, width = raw.shape[:2]
+        chw, matrix = preprocess(raw, rotation)
+        props = {"id": name, "width": width, "height": height, "rotation": rotation, "mode": mode,
+                 "source": source, "sourceSha256": hashlib.sha256((ROOT / source).read_bytes()).hexdigest(),
+                 "rawSha256": hashlib.sha256(raw.tobytes()).hexdigest(), "ortVersion": ort.__version__}
+        model_ids = ["pump-seg", "pump-pose"] if mode == "OVERVIEW" else ["corrosion"]
+        props["models"] = ",".join(model_ids)
+        decoded = {}
+        target = DEST / f"{name}.zip"
+        with zipfile.ZipFile(target, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=7) as archive:
+            archive.writestr("raw.rgb", raw.tobytes())
+            archive.writestr("preprocessed.f32", chw.astype("<f4").tobytes())
+            for model in model_ids:
+                outputs = sessions[model].run(None, {"images": chw[None]})
+                props[f"{model}.sha256"] = hashlib.sha256((MODELS / f"{model}.onnx").read_bytes()).hexdigest()
+                props[f"{model}.outputs"] = len(outputs)
+                for i, output in enumerate(outputs):
+                    archive.writestr(f"{model}.output{i}.f32", output.astype("<f4").tobytes())
+                found = decode(outputs, matrix, width, height, pose=model == "pump-pose")
+                decoded[model] = found
+                props[f"{model}.count"] = len(found)
+                for i, detection in enumerate(found):
+                    prefix = f"{model}.{i}"
+                    props[prefix + ".index"] = detection["index"]
+                    props[prefix + ".confidence"] = detection["confidence"]
+                    props[prefix + ".bbox"] = csv(detection["bbox"])
+                    if "mask" in detection:
+                        mask = detection["mask"]
+                        props[prefix + ".maskWidth"] = mask.shape[1]
+                        props[prefix + ".maskHeight"] = mask.shape[0]
+                        archive.writestr(prefix + ".mask", mask.tobytes())
+                    else:
+                        props[prefix + ".points"] = len(detection["keypoints"])
+                        for j, point in enumerate(detection["keypoints"]):
+                            props[f"{prefix}.point{j}.id"] = point["id"]
+                            props[f"{prefix}.point{j}.xy"] = csv(point["point"])
+                            props[f"{prefix}.point{j}.confidence"] = point["confidence"]
+            if mode == "OVERVIEW":
+                equipment = [e for e in decoded["pump-seg"] if np.prod(e["bbox"][2:] - e["bbox"][:2]) >= .035 and e["mask"].any()]
+                zones = zones_reference(equipment, decoded["pump-pose"])
+                props["engine.status"] = "EQUIPMENT_NOT_FOUND" if not equipment else "EQUIPMENT_FOUND" if len(equipment) == 1 else "AMBIGUOUS"
+                props["engine.equipment"] = len(equipment)
+                props["engine.defects"] = 0
+            else:
+                defects = [e for e in decoded["corrosion"] if e["mask"].any()]
+                zones = []
+                props["engine.status"] = "DEFECT_CANDIDATE" if defects else "NO_DEFECT_DETECTED"
+                props["engine.equipment"] = 0
+                props["engine.defects"] = len(defects)
+            props["engine.zones"] = len(zones)
+            for i, zone in enumerate(zones):
+                props[f"zone{i}.id"] = zone["id"]
+                props[f"zone{i}.xy"] = csv(zone["point"])
+            archive.writestr("fixture.properties", "\n".join(f"{k}={v}" for k, v in props.items()) + "\n")
+        report["fixtures"].append({"id": name, "source": source, "rawSize": [width, height], "rotation": rotation,
+                                  "archiveBytes": target.stat().st_size, "models": {m: len(v) for m, v in decoded.items()},
+                                  "status": props["engine.status"], "zones": len(zones)})
+    (DEST / "generation.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(json.dumps(report, ensure_ascii=False, indent=2))
+
+
+if __name__ == "__main__":
+    main()

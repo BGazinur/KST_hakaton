@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "event": "equipment_code_recognized",
+  "requestId": "17d96838-b5eb-4522-805f-f3d6934f9acb",
+  "equipmentCode": "00123456",
+  "source": "QR",
+  "sessionId": "example-session",
+  "inspectionEpoch": "1",
+  "frameTimestampNs": "123456789000"
+}

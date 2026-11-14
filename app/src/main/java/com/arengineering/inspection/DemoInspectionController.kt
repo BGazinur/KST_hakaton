@@ -118,6 +118,7 @@ internal class DemoInspectionController(
             InspectionAction.DemoFindPump -> if (stage is InspectionStage.FindPump) {
                 mutableState.value = current.copy(stage = InspectionStage.InspectNode(steps.first(), 1, steps.size))
             }
+            InspectionAction.ConfirmPump -> Unit
             is InspectionAction.DemoReadNode -> if (stage is InspectionStage.InspectNode &&
                 stage.result == null && stage.step.id == action.stepId
             ) {

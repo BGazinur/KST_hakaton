@@ -34,7 +34,7 @@ import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationExceptio
 class MainActivity : ComponentActivity() {
     private var preview by mutableStateOf<ArPreview?>(null)
     private lateinit var demoController: InspectionUiController
-    private lateinit var serverController: InspectionUiController
+    private lateinit var serverController: BackendInspectionController
     private var demoMode by mutableStateOf(false)
     private val controller get() = if (demoMode) demoController else serverController
     private var issue by mutableStateOf<StartupIssue?>(null)
@@ -84,10 +84,20 @@ class MainActivity : ComponentActivity() {
                 active.state.collect { value ->
                     if (value.account == null) {
                         closeSession()
+                        preview?.closeAnalysis()
                         preview = null
                         issue = null
                     } else {
                         startArIfNeeded()
+                        if (foreground) preview?.analyze(value.cameraAnalysisTarget())
+                    }
+                }
+            }
+            val activePreview = preview
+            LaunchedEffect(activePreview, active) {
+                activePreview?.cameraAnalysis?.collect { update ->
+                    if (active === serverController && foreground && update.target == active.state.value.cameraAnalysisTarget()) {
+                        serverController.onCorrosionCandidate(update.confidence)
                     }
                 }
             }
@@ -96,7 +106,13 @@ class MainActivity : ComponentActivity() {
 
     private fun startArIfNeeded() {
         if (!foreground || controller.state.value.account == null || preview != null) return
-        preview = ArPreview(this) {
+        preview = ArPreview(this, onCode = { code ->
+            runOnUiThread {
+                if (!isDestroyed && foreground && !demoMode && previewRunning && preview?.isCurrentCode(code) == true) {
+                    serverController.onEquipmentCode(code)
+                }
+            }
+        }) {
             runOnUiThread {
                 if (!isDestroyed && controller.state.value.account != null) {
                     closeSession()
@@ -127,6 +143,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         closeSession()
+        preview?.closeAnalysis()
         super.onDestroy()
     }
 
@@ -150,6 +167,7 @@ class MainActivity : ComponentActivity() {
             }
             val current = checkNotNull(session)
             current.resume()
+            arPreview.analyze(controller.state.value.cameraAnalysisTarget())
             arPreview.start(current)
             previewRunning = true
             issue = null

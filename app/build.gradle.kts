@@ -19,6 +19,8 @@ android {
     buildFeatures {
         compose = true
     }
+
+    androidResources { noCompress += "onnx" }
 }
 
 ksp {
@@ -26,6 +28,7 @@ ksp {
 }
 
 dependencies {
+    implementation(project(":cv"))
     implementation("com.google.ar:core:1.57.0")
     implementation("androidx.activity:activity-compose:1.13.0")
     implementation(platform("androidx.compose:compose-bom:2026.02.01"))

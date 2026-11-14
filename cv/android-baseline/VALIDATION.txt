@@ -1,0 +1,58 @@
+Проверка пакета — 14.11.2026
+
+База: BGazinur/KST_hakaton main d2cca83e6487742facbfda3ea84668d859ae1946.
+Проверено в отдельной рабочей копии, исходный репозиторий не изменён, push не было.
+Скопирован именно переносимый cv/ module, app зависит от него; integration example
+скомпилирован внутри app. Вызовы к UI/ArPreview пока подключает Android-разработчик.
+Тестовый APK подтверждает сборку/упаковку; это не готовое приложение для защиты.
+
+Android: Gradle9.4.1 / AGP9.2.1 / SDK36 BuildTools36 / JDK21.
+ARCore1.57.0, ONNX Runtime Android1.23.2. Команды:
+  .\gradlew.bat :app:assembleDebug :app:lintDebug :cv:testDebugUnitTest :cv:lintDebug
+  .\gradlew.bat :app:assembleDebug :app:lintDebug --offline
+Проверки успешны. Отдельный повтор проверил последнюю правку callback ошибок
+в примере подключения; заключительный — noCompress ONNX на уровне app.
+Library noCompress не наследуется упаковщиком app; этот нюанс обнаружен
+проверкой APK и исправлен в integration/gradle.patch.
+Итоговый полный offline-прогон также проверяет default modelManifestVersion,
+согласованный с JSON-схемой (pump-cv-1).
+Основной Maven Central вернул403; только в проверочной
+копии использовано зеркало https://maven-central.storage-download.googleapis.com/maven2 .
+Версии библиотек не менялись. В передаваемых Gradle-файлах зеркало не навязано.
+
+JUnit:27 пройдено,0 ошибок/пропусков. Геометрия четырёх поворотов и нечётного
+letterbox, NMS и float32 границы порогов, маски с отверстиями/раздельными частями,
+точки и связь с сегментацией, session/epoch/age/tracking guards, JSON Long/escaping,
+YUV crop/rowStride/pixelStride/позиция буфера, движение относительно reference.
+Это JVM unit tests, не Android instrumentation.
+
+Полная численная проверка трёх контрольных кадров:
+Python ORT1.23.2 vs JVM ORT1.23.2 CPU — CHW и все модельные выходы maxAbs=0,
+все контрольные instance masks IoU=1.0, координаты/точки/статусы совпали.
+Допуски закреплены в ModelParityTest.kt: input1e-6, output abs0.002+rel2e-5,
+norm-coordinate1e-4, maskIoU>=0.995. Независимый NumPy эталон проверяет алгоритм
+декодирования. Эти совпадения не являются метрикой распознавания новых насосов.
+Все3 фактических JSON прошли JSON Schema2020-12 и межполевые проверки.
+
+Lint:0 ошибок,5 предупреждений app и2 cv о доступных более новых версиях
+инструментов/зависимостей. Сохранены версии целевого репозитория.
+Gradle отдельно сообщает повторную загрузку Kotlin plugin в app/cv при
+раздельных version declarations. При объединении build scripts можно вынести
+AGP application/library и Compose plugin versions в корневой plugins{apply false}.
+Это предупреждение; текущая комбинация прошла сборку. JDK21 также предупреждает
+о Thread.getId(); этот API доступен на минимальном Android24.
+
+APK: все3 ONNX в assets/cv с ожидаемыми SHA и без ZIP-сжатия; тестовых RGB/parity
+ресурсов в APK нет. Проверены идентичность поставляемых исходников собранным
+исходникам и контрольные суммы моделей. Сам APK в пакет не включён.
+
+Независимый review: исправлены float32 границы порогов и защита CapturedCvResult
+от другого экземпляра bridge через ownerToken. Runtime не записывает и не
+отправляет кадры. Во время тестов использованы существовавшие offline fixtures.
+
+Не проверено: живой YUV на целевом телефоне, FPS/нагрев/энергопотребление,
+AR tracking и удержание якоря при движении, точность на рабочем насосе,
+поворот экрана/жизненный цикл на устройстве, release shrinker/ускорители.
+Это следующий совместный приёмочный прогон Android+CV; шаги в ARCORE_INTEGRATION.txt.
+Модели экспериментальны: реальные точки насоса в прежнем тесте0/5,
+маскаIoU≈0.496 на2 реальных фото; веса не переобучены. См. MODEL_CARD.txt.

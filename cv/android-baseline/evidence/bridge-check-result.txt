@@ -1,0 +1,22 @@
+2026-11-14 bridge verification
+
+Kotlin 2.3.0 JVM target 17 compilation passed for every main source in the handoff module,
+BridgeIntegrationExample.kt, Yuv420CopierTest.kt and ReferenceMotionTest.kt.
+Compile classpath included the actual Android API 36 android.jar, ARCore 1.57.0 classes.jar,
+ONNX Runtime 1.23.2 and JUnit 4.13.2.
+
+JUnitCore completed with OK (8 tests).
+Final sources, including per-bridge capture ownership, compiled at 10:17 local time;
+the final compiled artifact was rechecked with the same eight passing JUnit tests.
+Independent read-only review of the final ownership and ARCore geometry guards found
+no remaining concrete findings. This is a source review, not physical-device validation.
+Four YUV tests cover padded rows, source buffer position, chroma stride, final row bounds,
+odd crop origins, neutral fill outside the valid region and limited-range black/white conversion.
+Four motion tests cover identity, quaternion sign equivalence, translation above 1 cm,
+rotation above 1 degree and invalid values.
+
+The compiler reported one JDK 21 deprecation warning for Thread.getId(). This API is retained
+for Android API 24 compatibility; replacing it with the newer Thread.threadId() would raise
+the Android API requirement.
+
+No physical camera, AR tracking or real anchor placement was tested by these checks.

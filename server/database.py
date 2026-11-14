@@ -38,18 +38,22 @@ def initialize(path):
         db.execute("PRAGMA journal_mode = WAL")
         db.execute("BEGIN IMMEDIATE")
         version = db.execute("PRAGMA user_version").fetchone()[0]
-        if version == 3:
+        if version == 4:
             return
         if version == 0:
             execute_sql(db, ROOT / "schema.sql")
             seed(db)
-        elif version not in (1, 2):
+        elif version not in (1, 2, 3):
             raise RuntimeError(f"Unsupported database schema version: {version}")
         if version == 1:
             execute_sql(db, ROOT / "migrations" / "002.sql")
         if version in (1, 2):
             execute_sql(db, ROOT / "migrations" / "003.sql")
-        db.execute("PRAGMA user_version = 3")
+        if version in (1, 2, 3):
+            execute_sql(db, ROOT / "migrations" / "004.sql")
+        if db.execute("SELECT 1 FROM equipment WHERE id = ? AND is_demo = 1", (DEMO_PUMP,)).fetchone():
+            seed_cv(db)
+        db.execute("PRAGMA user_version = 4")
 
 
 def execute_sql(db, path):
@@ -168,6 +172,30 @@ def seed(db):
     if first is None:
         raise RuntimeError("The replay asset contains no measurements")
     set_current(db, DEMO_PUMP, first["id"])
+
+
+def seed_cv(db):
+    db.executemany(
+        "INSERT OR IGNORE INTO equipment_identifiers (kind, value, equipment_id) VALUES (?, '00123456', ?)",
+        [("qr", DEMO_PUMP), ("nameplate", DEMO_PUMP)],
+    )
+    db.execute(
+        """
+        INSERT INTO inspection_checks (
+            equipment_id, position, title, instructions, acceptance_criteria, recommendation, visual_model
+        )
+        SELECT ?, COALESCE(MAX(position), 0) + 1, ?, ?, ?, ?, 'corrosion'
+        FROM inspection_checks WHERE equipment_id = ?
+        HAVING COUNT(CASE WHEN visual_model = 'corrosion' THEN 1 END) = 0
+        """,
+        (
+            DEMO_PUMP, "Коррозия рамы насоса",
+            "Приблизьтесь и наведите камеру на металлическую раму насоса.",
+            "Осмотрите раму. Оцените подсвеченные участки и подтвердите результат вручную.",
+            "Зафиксируйте участок и передайте наблюдение для проверки по регламенту.",
+            DEMO_PUMP,
+        ),
+    )
 
 
 def set_current(db, equipment_id, sample_id):

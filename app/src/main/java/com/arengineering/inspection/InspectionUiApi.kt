@@ -73,7 +73,7 @@ data class InspectionReport(
 )
 
 sealed interface InspectionStage {
-    data class ScanQr(val error: String? = null) : InspectionStage
+    data class ScanQr(val error: String? = null, val lookingUp: Boolean = false) : InspectionStage
     data class PickEquipment(
         val options: List<EquipmentRef> = emptyList(),
         val loading: Boolean = false,
@@ -89,6 +89,8 @@ sealed interface InspectionStage {
         val total: Int,
         val guidance: String? = null,
         val result: StepResult? = null,
+        val scanCorrosion: Boolean = false,
+        val corrosionConfidence: Float? = null,
     ) : InspectionStage
     data class Summary(
         val report: InspectionReport,
@@ -109,6 +111,7 @@ data class ProjectedMark(
 data class InspectionOverlay(
     val pumpContour: List<ViewportPoint> = emptyList(),
     val marks: List<ProjectedMark> = emptyList(),
+    val defectRegions: List<List<ViewportPoint>> = emptyList(),
 )
 
 sealed interface InspectionAction {
@@ -119,6 +122,7 @@ sealed interface InspectionAction {
     data class SelectEquipment(val id: String) : InspectionAction
     data object StartInspection : InspectionAction
     data object ContinueInspection : InspectionAction
+    data object ConfirmPump : InspectionAction
     data class SkipNode(val stepId: String) : InspectionAction
     data class NextNode(val stepId: String) : InspectionAction
     data class RecordNode(val stepId: String, val outcome: StepOutcome) : InspectionAction

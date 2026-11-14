@@ -1,0 +1,82 @@
+Формат результата v1
+
+Внутри Android передавать CvResult непосредственно, без JSON и сети.
+CvResultJson.encode(result) — точный JSON-кодек для журналов метаданных,
+тестового стенда и обмена с другой частью команды. Схема:
+contract/result.schema.json. Фактические примеры: examples/results/.
+RGB/YUV, модельные тензоры и снимок экрана в JSON не включены.
+JSON не содержит живой reference Anchor/владельца CapturedCvResult и не является
+командой создания якоря. Пространственный выбор выполнять через native bridge
+в той же AR-сессии. Не восстанавливать 3D-привязку только из экспортированного JSON.
+
+Координаты
+coordinateSpace = raw_image_normalized. Начало в левом верхнем углу полного
+CPU Image, x вправо, y вниз. До поворота, letterbox и экранного crop.
+Точка [x,y] → [x*imageWidth, y*imageHeight] пикселей. Края изображения — 0 и 1.
+bbox = [left, top, right, bottom], порядок не xywh. Координаты рамок/точек 0..1.
+Для маски центр ячейки (i,j): [(i+.5)/mask.width, (j+.5)/mask.height].
+
+geometry.imageToView = [a,b,c,d,e,f] получена на ИСХОДНОМ ARCore Frame:
+u = a*x + b*y + c; v = d*x + e*y + f. Это VIEW_NORMALIZED, затем умножить
+на фактические размеры AR viewport. Значения u/v могут выходить за 0..1:
+отсечь невидимую часть, не прижимать точки к границам экрана.
+Преобразование учитывает поворот и обрезку для исходного кадра. Оно НЕ
+компенсирует движение телефона между исходным и текущим кадром.
+geometry.rotationCw — 0/90/180/270, использованное вращение входа модели.
+intrinsics — fx/fy/cx/cy в пикселях CPU Image. cameraPose — поза камеры ARCore
+на исходном кадре, метры, quaternion xyzw. Нельзя переиспользовать эту позу
+как постоянную мировую систему координат в последующих кадрах.
+
+Маска
+encoding = rle_row_major_zero_first. counts — длины чередующихся серий нулей
+и единиц; первая всегда нулевая, может иметь длину 0. Развёртка построчная:
+index=y*width+x. Сумма counts обязана быть width*height. Нулей может быть
+много, но они тоже покрывают полное поле CPU Image; bbox не задаёт crop маски.
+Пример: width=4,height=2,counts=[1,2,2,1,2] → 0110 / 0100.
+Это НЕ COCO column-major RLE. В Kotlin mask.decode() возвращает BooleanArray.
+Для показа рисовать bitmap/texture с прозрачными нулями и nearest sampling.
+При обводке выделять все отдельные границы и отверстия. Не соединять компоненты
+одним полигоном: это порождает ложные диагональные полосы между пятнами.
+Маска максимум 256 по длинной стороне; очень мелкие элементы могут исчезнуть.
+RLE сохраняет топологию предсказания, но не восстанавливает отверстия, которых
+модель не предсказала или которых не было в обучающей YOLO-разметке.
+
+Объекты
+equipment: id, confidence, bbox, mask. id — frame-local ID детекции,
+НЕ постоянный track ID и НЕ assetId из QR. Между кадрами он может измениться.
+zoneCandidates: id=frame|casing|terminal_box, point, confidence, equipmentId.
+frame — рама; casing — корпус; terminal_box — наружная поверхность закрытой
+клеммной коробки. Уверенность — score модели, не вероятность исправности.
+defects: id, type=corrosion, confidence, bbox, mask. Это гипотеза признака.
+
+Состояния
+EQUIPMENT_FOUND — одна допустимая сегментация; список зон может быть пуст.
+EQUIPMENT_NOT_FOUND — оборудование не найдено по заданным порогам.
+AMBIGUOUS — несколько агрегатов; автоматический выбор зон запрещён.
+DEFECT_CANDIDATE — есть кандидат коррозии в крупном плане.
+NO_DEFECT_DETECTED — нет кандидата выше порога; это НЕ «исправен».
+UNSUPPORTED_DETAIL — для этой задачи отсутствует обученная модель.
+Непредвиденный сбой/нехватка камеры не маскируется статусом «нет дефекта»:
+bridge.takeFailure() сообщает ошибку отдельно, overlay очищается.
+
+Синхронизация
+stamp.sessionId уникален для AR-сессии, geometryEpoch меняется при новой
+геометрии viewport/ориентации, inspectionEpoch — при смене QR/этапа/зоны/сбросе.
+frameTimestampNs совпадает с timestamp CPU Image исходного кадра.
+acquiredElapsedNs фиксирует Android elapsedRealtimeNanos при получении кадра.
+Эти четыре целочисленных поля (epochs и timestamps) в JSON — десятичные строки,
+чтобы JavaScript не терял точность 64-битного Long. Не преобразовывать в Number.
+Не вычитать frameTimestampNs из elapsedRealtimeNanos: часы различаются.
+
+timings.preprocessMs/inferenceMs/decodeMs измеряют этапы внутри engine.
+Они НЕ включают весь путь камеры/YUV/очереди/отрисовки и не равны FPS.
+Для задержки текущий elapsedRealtimeNanos минус acquiredElapsedNs.
+Значение maxResultAgeNs в bridge по умолчанию 250ms; это ограничитель,
+не измеренная скорость. При медленном CPU результаты могут отбрасываться.
+Менять лимит только после измерения, сохраняя проверку движения для overlay.
+
+Проверки сверх JSON Schema
+Сумма RLE, порядок bbox, нормированный quaternion, совпадение geometry/stamp,
+ссылки equipmentId, соответствие mode/status, session/epochs/возраст, положение
+точки в crop и видимость поверхности. Schema проверяет структуру, но не все
+межполевые/геометрические инварианты. Генерировать JSON штатным Kotlin-кодеком.

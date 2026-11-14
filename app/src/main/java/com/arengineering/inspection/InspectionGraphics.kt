@@ -65,6 +65,18 @@ internal fun InspectionGraphics(
             drawPath(contour, SkyBlue.copy(alpha = 0.12f))
             drawPath(contour, SkyBlue, style = Stroke(2.dp.toPx()))
         }
+        overlay.defectRegions.forEach { points ->
+            if (points.size < 3) return@forEach
+            val border = Path()
+            points.forEachIndexed { index, point ->
+                val x = point.x * size.width
+                val y = point.y * size.height
+                if (index == 0) border.moveTo(x, y) else border.lineTo(x, y)
+            }
+            border.close()
+            drawPath(border, Amber.copy(alpha = 0.16f))
+            drawPath(border, Amber, style = Stroke(2.dp.toPx()))
+        }
         overlay.marks.forEach { mark ->
             drawMarker(
                 Offset(mark.point.x * size.width, mark.point.y * size.height),

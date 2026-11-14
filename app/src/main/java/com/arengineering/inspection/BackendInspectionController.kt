@@ -2,6 +2,8 @@ package com.arengineering.inspection
 
 import android.content.res.Resources
 import androidx.annotation.StringRes
+import com.arengineering.inspection.cv.EquipmentLookupRequest
+import com.arengineering.inspection.cv.CodeSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,6 +15,7 @@ import org.json.JSONObject
 import java.io.IOException
 import java.text.ParsePosition
 import java.text.SimpleDateFormat
+import java.text.NumberFormat
 import java.util.Locale
 import java.util.TimeZone
 import java.util.UUID
@@ -27,6 +30,24 @@ internal class BackendInspectionController(
     private var passport: JSONObject? = null
     private val results = mutableListOf<StepResult>()
     override val state = model.asStateFlow()
+
+    fun onEquipmentCode(code: EquipmentLookupRequest) {
+        val current = model.value
+        val stage = current.stage as? InspectionStage.ScanQr ?: return
+        if (current.account == null || stage.lookingUp || stage.error != null) return
+        model.value = current.copy(stage = stage.copy(lookingUp = true))
+        request(onError = { model.value = model.value.copy(stage = InspectionStage.ScanQr(error = it)) }) {
+            val resolved = JSONObject(api.resolveEquipment(code.equipmentCode, code.source == CodeSource.OCR).requireSuccess())
+            loadEquipment(resolved.getLong("equipment_id"))
+        }
+    }
+
+    fun onCorrosionCandidate(confidence: Float?) {
+        val current = model.value
+        val stage = current.stage as? InspectionStage.InspectNode ?: return
+        if (!stage.scanCorrosion || stage.result != null || stage.corrosionConfidence == confidence) return
+        model.value = current.copy(stage = stage.copy(corrosionConfidence = confidence))
+    }
 
     override fun dispatch(action: InspectionAction) {
         val current = model.value
@@ -51,12 +72,18 @@ internal class BackendInspectionController(
                 stage is InspectionStage.AnalysisReady && stage.error != null
             ) analyze()
             InspectionAction.ContinueInspection -> if (stage is InspectionStage.AnalysisReady && stage.error == null) {
-                showStep(0)
+                if (passport?.optJSONObject("equipment")?.optString("kind") == "centrifugal_pump") {
+                    model.value = current.copy(stage = InspectionStage.FindPump)
+                } else showStep(0)
             }
+            InspectionAction.ConfirmPump -> if (stage is InspectionStage.FindPump) showStep(0)
             is InspectionAction.RecordNode -> if (stage is InspectionStage.InspectNode &&
                 stage.result == null && stage.step.id == action.stepId && action.outcome != StepOutcome.SKIPPED
             ) {
-                val result = stepResult(stage.step, action.outcome)
+                val recorded = stepResult(stage.step, action.outcome)
+                val result = recorded.copy(findings = recorded.findings.map {
+                    it.copy(confidence = stage.corrosionConfidence)
+                })
                 model.value = current.copy(
                     stage = stage.copy(result = result), findings = current.findings + result.findings,
                 )
@@ -141,15 +168,19 @@ internal class BackendInspectionController(
     private fun selectEquipment(picker: InspectionStage.PickEquipment, id: Long) {
         model.value = model.value.copy(stage = InspectionStage.PickEquipment(loading = true))
         request(onError = { model.value = model.value.copy(stage = picker.copy(error = it)) }) {
-            val snapshot = JSONObject(api.passport(id, checksOnly = false).requireSuccess())
-            val history = JSONArray(api.history(id).requireSuccess()).objects().map {
-                historyReport(JSONObject(api.report(it.getLong("id")).requireSuccess()))
-            }
-            passport = snapshot
-            model.value = model.value.copy(
-                stage = InspectionStage.EquipmentPreview, equipment = equipmentCard(snapshot), history = history,
-            )
+            loadEquipment(id)
         }
+    }
+
+    private suspend fun loadEquipment(id: Long) {
+        val snapshot = JSONObject(api.passport(id, checksOnly = false).requireSuccess())
+        val history = JSONArray(api.history(id).requireSuccess()).objects().map {
+            historyReport(JSONObject(api.report(it.getLong("id")).requireSuccess()))
+        }
+        passport = snapshot
+        model.value = model.value.copy(
+            stage = InspectionStage.EquipmentPreview, equipment = equipmentCard(snapshot), history = history,
+        )
     }
 
     private fun analyze() {
@@ -177,6 +208,7 @@ internal class BackendInspectionController(
         model.value = current.copy(stage = if (next != null) {
             InspectionStage.InspectNode(
                 step(next), index + 1, steps.length(), guidance = next.string("acceptance_criteria"),
+                scanCorrosion = next.string("visual_model") == "corrosion",
             )
         } else {
             val card = checkNotNull(current.equipment)
@@ -195,7 +227,12 @@ internal class BackendInspectionController(
             val report = summary.report
             val items = JSONArray()
             report.results.forEach { result ->
-                items.put(JSONObject().put("check_id", result.step.id.toLong()).put("outcome", result.outcome.apiValue))
+                val item = JSONObject().put("check_id", result.step.id.toLong()).put("outcome", result.outcome.apiValue)
+                val confidence = result.findings.firstOrNull()?.confidence
+                if (confidence != null) {
+                    item.put("observation", strings.getString(R.string.cv_corrosion_candidate, formatConfidence(confidence)))
+                }
+                items.put(item)
             }
             val payload = JSONObject().put("equipment_id", report.equipment.id.toLong())
                 .put("client_request_id", report.id).put("notes", note.trim()).put("items", items)
@@ -303,7 +340,8 @@ internal class BackendInspectionController(
     private fun historyReport(value: JSONObject): InspectionReport {
         val results = value.getJSONArray("items").objects().map { item ->
             val check = item.getJSONObject("check_snapshot")
-            stepResult(step(check), StepOutcome.entries.first { it.apiValue == item.getString("outcome") }, check)
+            val result = stepResult(step(check), StepOutcome.entries.first { it.apiValue == item.getString("outcome") }, check)
+            result.copy(findings = result.findings.map { it.copy(visualObservation = item.string("observation")) })
         }
         val time = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ROOT).apply {
             timeZone = TimeZone.getTimeZone("UTC")
@@ -321,6 +359,8 @@ internal class BackendInspectionController(
 
 private fun JSONObject.string(key: String) = if (isNull(key)) null else getString(key).takeIf { it.isNotBlank() }
 private fun JSONArray.objects() = (0 until length()).map(::getJSONObject)
+
+internal fun formatConfidence(value: Float): String = NumberFormat.getPercentInstance().format(value.toDouble())
 
 private class BackendError(val status: Int, message: String?) : Exception(message)
 

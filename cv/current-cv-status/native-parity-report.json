@@ -1,0 +1,94 @@
+{
+  "purpose": "Python/JVM CPU numerical parity only, not accuracy, video stability or device performance",
+  "manifest": "C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\work\\pump_v2_data\\prepared\\manifest.json",
+  "manifest_sha256": "f0488c43be88e7a47de97d6dc765e1d38cca793e8537ebf5b66237f82f2cb705",
+  "manifest_version": "pump-cv-real-v3-candidate",
+  "python_ort": "1.23.2",
+  "jvm_ort_expected": "1.23.2",
+  "fixtures": [
+    {
+      "fixture": "pump90",
+      "id": "wc_083",
+      "group": "pool_bruck",
+      "split": "val",
+      "image": "C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\work\\pump_v2_data\\commons\\wc_083.jpg",
+      "sha256": "7db50a0615649f25d7b6668b016c316660fe300b28df5bba7d039c33470bc946",
+      "rotation": 90,
+      "uprightSize": [
+        319,
+        481
+      ]
+    },
+    {
+      "fixture": "pump270",
+      "id": "wc_092",
+      "group": "pool_bruck",
+      "split": "val",
+      "image": "C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\work\\pump_v2_data\\commons\\wc_092.jpg",
+      "sha256": "4b2acd5efd8bcad1d803cc152ff62132f153260a246a5336a537f8b9d4af3acd",
+      "rotation": 270,
+      "uprightSize": [
+        641,
+        965
+      ]
+    },
+    {
+      "fixture": "pump0",
+      "id": "we_083",
+      "group": "st_elisabeth_fire_pump",
+      "split": "val",
+      "image": "C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\work\\pump_v2_data\\commons_electric\\we_083.jpg",
+      "sha256": "8916a3e132d30bcd1f3e0a0c7a284fbd961fa9920f5578b954d4ed74df532ed1",
+      "rotation": 0,
+      "uprightSize": [
+        315,
+        483
+      ]
+    }
+  ],
+  "models": {
+    "pump-seg": {
+      "source": "C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\outputs\\pump-real-v3\\models\\pump-seg.onnx",
+      "sha256": "591ef2662781a659e14024333ce945af0f4304214f9c4e60941b1d102ff0f6dc"
+    },
+    "pump-pose": {
+      "source": "C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\outputs\\pump-real-v3\\models\\pump-pose.onnx",
+      "sha256": "12f1524142397127a2b1760e47caa96d6cac387ca61a4ace50fd6f2a9bff328a"
+    },
+    "corrosion": {
+      "source": "C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\outputs\\pump-mobile\\corrosion.onnx",
+      "sha256": "fe23ef5e49b29ec4a3adc97d6ea956bbf576aeb350b36714f0a12aafe92aa3f9"
+    }
+  },
+  "source_changes": "Isolated copies only: model SHA pins, manifest labels/default, VAL fixture name and JVM ORT version assertion; runtime algorithms unchanged",
+  "android_update": "C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\work\\pump_v3_native_parity\\android-update",
+  "original_handoff_modified": false,
+  "kotlin_source_sha256": {
+    "CvTypes.kt": "36ece9e62b7c8d4e9829da0d0059b81da496a5dca8ef7a3b430bad854afcb006",
+    "Geometry.kt": "edd948366cb0cb01f938725a895fe9b1af384fade9bc5d755a6a00f7bd336a44",
+    "YoloDecoder.kt": "fed5fa2d17ffcbcdad7892e34a4ef3864e8564b302a171512fd1e96ac276c10c",
+    "ImagePreprocessor.kt": "843c9bc39d8607c812153e5986dfb9ed037ce1a271444f2fbf1b658db2e25a5b",
+    "OrtPumpEngine.kt": "46ad05a94cc5afdf80df77f2e4bb7c00bf51d2df7e4d512aa1b1996e328702a5",
+    "CvResultJson.kt": "4335eb51b8ea0b4a06ba7db83cfde79d926fedc03263cf3ec0b49e2fccb79d9a",
+    "ResultGate.kt": "55e5a92d6f3557ca2140ef642885f32e5126fbcc5fcf1e87115845e35b111fc0",
+    "ModelParityTest.kt": "b75eace5b1221719a42f2960f37e07c9b65d54a03909348a588eea536b7b81a1",
+    "CoreCvTest.kt": "e0cc1ec1ed46d47b0eb3905859dd65209ef7ac3b00a4f579fcd1fdf49675f1cb",
+    "CvResultJsonTest.kt": "c2e116eba64246c72922066076e9ef811c7915d615561cd9151d90c540e479b8"
+  },
+  "status": "passed",
+  "junit_tests": 19,
+  "jvm_command": [
+    "C:\\Program Files\\Android\\openjdk\\jdk-21.0.8\\bin\\java.exe",
+    "-Xmx2g",
+    "-Dcv.modelDir=C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\work\\pump_v3_native_parity\\android-update\\src\\main\\assets\\cv",
+    "-Dcv.resultDir=C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\work\\pump_v3_native_parity\\results",
+    "-cp",
+    "C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\work\\pump_v3_native_parity\\model-parity.jar;C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\work\\pump_v3_native_parity\\resources;C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\work\\handoff-gradle-home\\wrapper\\dists\\gradle-9.4.1-bin\\arn2x92ynaizyzdaamcbpbhtj\\gradle-9.4.1\\lib\\kotlin-stdlib-2.3.0.jar;C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\work\\android_handoff_deps\\junit-4.13.2.jar;C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\work\\android_handoff_deps\\hamcrest-core-1.3.jar;C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\work\\android_handoff_deps\\onnxruntime-1.23.2.jar",
+    "org.junit.runner.JUnitCore",
+    "com.arengineering.inspection.cv.ModelParityTest",
+    "com.arengineering.inspection.cv.CoreCvTest",
+    "com.arengineering.inspection.cv.CvResultJsonTest"
+  ],
+  "jvm_output": "JUnit version 4.13.2\n.PARITY pump270/preprocess maxAbs=0.0 rms=0.0 n=519168\nPARITY JVM ORT=1.23.2\nPARITY pump270/pump-seg/output0 maxAbs=0.0 rms=0.0 n=131313\nPARITY pump270/pump-seg/output1 maxAbs=0.0 rms=0.0 n=346112\nPARITY pump270/pump-seg.0 maskIoU=1.0 mismatchedPixels=0\nPARITY pump270/pump-pose/output0 maxAbs=0.0 rms=0.0 n=49686\nPARITY pump270/engine EQUIPMENT_FOUND equipment=1 zones=3 defects=0\n.PARITY pump0/preprocess maxAbs=0.0 rms=0.0 n=519168\nPARITY JVM ORT=1.23.2\nPARITY pump0/pump-seg/output0 maxAbs=0.0 rms=0.0 n=131313\nPARITY pump0/pump-seg/output1 maxAbs=0.0 rms=0.0 n=346112\nPARITY pump0/pump-seg.0 maskIoU=1.0 mismatchedPixels=0\nPARITY pump0/pump-pose/output0 maxAbs=0.0 rms=0.0 n=49686\nPARITY pump0/engine EQUIPMENT_FOUND equipment=1 zones=3 defects=0\n.PARITY pump90/preprocess maxAbs=0.0 rms=0.0 n=519168\nPARITY JVM ORT=1.23.2\nPARITY pump90/pump-seg/output0 maxAbs=0.0 rms=0.0 n=131313\nPARITY pump90/pump-seg/output1 maxAbs=0.0 rms=0.0 n=346112\nPARITY pump90/pump-pose/output0 maxAbs=0.0 rms=0.0 n=49686\nPARITY pump90/engine EQUIPMENT_NOT_FOUND equipment=0 zones=0 defects=0\n................\nTime: 3,056\n\nOK (19 tests)\n\n",
+  "schema_validated_results": 3
+}

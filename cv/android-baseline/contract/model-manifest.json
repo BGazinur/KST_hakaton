@@ -1,0 +1,150 @@
+{
+  "manifestVersion": "pump-cv-1",
+  "resultSchemaVersion": 1,
+  "repository": "https://github.com/BGazinur/KST_hakaton",
+  "repositoryCommit": "d2cca83e6487742facbfda3ea84668d859ae1946",
+  "runtime": "onnxruntime-android:1.23.2",
+  "executionProvider": "CPU",
+  "minSdk": 24,
+  "models": [
+    {
+      "id": "pump-seg",
+      "assetPath": "cv/pump-seg.onnx",
+      "sha256": "8ae73cbfad0c2d9d8579d389caf6c40d7ca14bea1dc4988ba37f91f2cca858d9",
+      "bytes": 11485858,
+      "format": "ONNX",
+      "opset": 17,
+      "input": {
+        "images": [
+          1,
+          3,
+          416,
+          416
+        ]
+      },
+      "dtype": "float32",
+      "outputs": {
+        "output0": [
+          1,
+          37,
+          3549
+        ],
+        "output1": [
+          1,
+          32,
+          104,
+          104
+        ]
+      },
+      "classNames": [
+        "pump_assembly"
+      ]
+    },
+    {
+      "id": "pump-pose",
+      "assetPath": "cv/pump-pose.onnx",
+      "sha256": "bcce4956d42f5e4b55aba29b7b405c8d79f666ad3d67acccf331dc25455121ef",
+      "bytes": 10806948,
+      "format": "ONNX",
+      "opset": 17,
+      "input": {
+        "images": [
+          1,
+          3,
+          416,
+          416
+        ]
+      },
+      "dtype": "float32",
+      "outputs": {
+        "output0": [
+          1,
+          14,
+          3549
+        ]
+      },
+      "classNames": [
+        "pump_assembly"
+      ],
+      "keypointNames": [
+        "frame",
+        "casing",
+        "terminal_box"
+      ]
+    },
+    {
+      "id": "corrosion",
+      "assetPath": "cv/corrosion.onnx",
+      "sha256": "fe23ef5e49b29ec4a3adc97d6ea956bbf576aeb350b36714f0a12aafe92aa3f9",
+      "bytes": 11485844,
+      "format": "ONNX",
+      "opset": 17,
+      "input": {
+        "images": [
+          1,
+          3,
+          416,
+          416
+        ]
+      },
+      "dtype": "float32",
+      "outputs": {
+        "output0": [
+          1,
+          37,
+          3549
+        ],
+        "output1": [
+          1,
+          32,
+          104,
+          104
+        ]
+      },
+      "classNames": [
+        "corrosion"
+      ]
+    }
+  ],
+  "preprocessing": {
+    "input": "raw RGB8 full image",
+    "rotation": "captured ARCore imageToView quadrant",
+    "inputSize": 416,
+    "resize": "half-pixel bilinear, round to uint8 before normalization",
+    "layout": "RGB NCHW",
+    "normalization": "divide by 255",
+    "letterboxFill": 114,
+    "dimensionRounding": "ties-to-even",
+    "padSplit": "floor left/top, remainder right/bottom"
+  },
+  "decoding": {
+    "nmsIncludedInModel": false,
+    "scoreChannel": 4,
+    "objectnessChannel": false,
+    "sigmoidScoresAgain": false,
+    "segmentationThreshold": 0.35,
+    "poseThreshold": 0.3,
+    "keypointThreshold": 0.65,
+    "nmsIou": 0.7,
+    "maxDetections": 10,
+    "associationIou": 0.55,
+    "maskContourToleranceFraction": 0.012,
+    "minEquipmentBoxArea": 0.035,
+    "maskMaxSide": 256,
+    "maskThresholdLogit": 0,
+    "maskEncoding": "rle_row_major_zero_first"
+  },
+  "status": "experimental; integration baseline, real-pump keypoints not validated",
+  "unsupportedDefects": [
+    "leakage",
+    "loose_bolt",
+    "oil_level",
+    "oil_color",
+    "terminal_oxidation",
+    "overheat",
+    "gauge_reading",
+    "coupling_guard",
+    "vibration",
+    "audio_cavitation"
+  ]
+}

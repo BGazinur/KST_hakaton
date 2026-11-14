@@ -140,6 +140,7 @@ CREATE TABLE IF NOT EXISTS inspection_checks (
     instructions TEXT NOT NULL,
     acceptance_criteria TEXT NOT NULL,
     recommendation TEXT NOT NULL,
+    visual_model TEXT CHECK (visual_model IN ('corrosion')),
     UNIQUE (equipment_id, position),
     UNIQUE (equipment_id, id)
 );

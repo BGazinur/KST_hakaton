@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.arengineering.inspection.cv.Yuv420CopierTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-11-14T05:26:47.169Z" hostname="DESKTOP-T8H5NC9" time="0.005">
+  <properties/>
+  <testcase name="limitedRangeBlackAndWhiteProduceRgbExtremes" classname="com.arengineering.inspection.cv.Yuv420CopierTest" time="0.002"/>
+  <testcase name="oddCropUsesFullImageChromaCellsAndNeutralOutsidePixels" classname="com.arengineering.inspection.cv.Yuv420CopierTest" time="0.0"/>
+  <testcase name="interleavedChromaUsesPixelStrideAndAcceptsMissingFinalPadding" classname="com.arengineering.inspection.cv.Yuv420CopierTest" time="0.002"/>
+  <testcase name="paddedRowsPreserveTheOriginalBufferPosition" classname="com.arengineering.inspection.cv.Yuv420CopierTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

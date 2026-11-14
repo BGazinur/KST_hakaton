@@ -131,7 +131,15 @@
     <string name="inspection_supervisor">Мастер</string>
     <string name="inspection_engineer">Инженер</string>
     <string name="inspection_no_checks">Для этого оборудования ещё нет шагов осмотра.</string>
-    <string name="inspection_manual_hint">На этом этапе оборудование выбирается вручную.</string>
+    <string name="cv_scan_hint">Наведите камеру на QR или восьмизначный номер. Для демо используйте 00123456.</string>
+    <string name="cv_frame_label">Рама насоса</string>
+    <string name="cv_pump_hint">Поместите насос целиком в кадр.</string>
+    <string name="cv_pump_found">Модель обнаружила насос. Убедитесь, что это выбранный агрегат.</string>
+    <string name="cv_pump_ambiguous">В кадре несколько насосов. Оставьте в кадре выбранный агрегат.</string>
+    <string name="cv_confirm_pump">Подтвердить насос</string>
+    <string name="cv_manual_continue">Перейти к осмотру вручную</string>
+    <string name="cv_corrosion_hint">Модель ищет возможные признаки коррозии. Оцените раму визуально.</string>
+    <string name="cv_corrosion_candidate">Возможная коррозия · уверенность модели %1$s</string>
     <string name="back_to_equipment">Вернуться к выбору оборудования</string>
     <string name="inspection_asset_tag">Инвентарный номер</string>
     <string name="inspection_description">Описание</string>

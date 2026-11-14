@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.arengineering.inspection.cv.ReferenceMotionTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-11-14T05:26:47.153Z" hostname="DESKTOP-T8H5NC9" time="0.01">
+  <properties/>
+  <testcase name="rotationBeyondOneDegreeIsRejected" classname="com.arengineering.inspection.cv.ReferenceMotionTest" time="0.004"/>
+  <testcase name="translationBeyondOneCentimeterIsRejected" classname="com.arengineering.inspection.cv.ReferenceMotionTest" time="0.0"/>
+  <testcase name="identityAndQuaternionSignGiveZeroRotation" classname="com.arengineering.inspection.cv.ReferenceMotionTest" time="0.001"/>
+  <testcase name="invalidRotationCannotAuthorizeAnOverlay" classname="com.arengineering.inspection.cv.ReferenceMotionTest" time="0.005"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -5,6 +5,7 @@ import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix
 import android.view.Surface
+import com.arengineering.inspection.cv.EquipmentLookupRequest
 import com.google.ar.core.Anchor
 import com.google.ar.core.Camera
 import com.google.ar.core.DepthPoint
@@ -22,13 +23,26 @@ import javax.microedition.khronos.opengles.GL10
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-internal class ArPreview(context: Context, onCameraUnavailable: () -> Unit) {
+internal class ArPreview(
+    context: Context,
+    onCode: (EquipmentLookupRequest) -> Unit,
+    onCameraUnavailable: () -> Unit,
+) {
     val view = GLSurfaceView(context)
+    private val analysis = InspectionCameraAnalysis(
+        context.applicationContext.assets, onCode, context.getString(R.string.cv_frame_label),
+    )
     private val renderer = ArRenderer(
         rotation = { view.display?.rotation ?: Surface.ROTATION_0 },
         onCameraUnavailable = onCameraUnavailable,
+        analysis = analysis,
     )
     val hud = renderer.hud
+    val cameraAnalysis = analysis.state
+
+    fun analyze(target: CameraAnalysisTarget?) = analysis.select(target)
+    fun isCurrentCode(code: EquipmentLookupRequest) = analysis.isCurrentCode(code)
+    fun closeAnalysis() = analysis.close()
 
     init {
         view.setEGLContextClientVersion(2)
@@ -42,6 +56,7 @@ internal class ArPreview(context: Context, onCameraUnavailable: () -> Unit) {
     }
 
     fun pause() {
+        analysis.select(null, restart = true)
         view.onPause()
         renderer.hideMarker()
     }
@@ -75,6 +90,7 @@ private sealed interface MarkerCommand {
 private class ArRenderer(
     private val rotation: () -> Int,
     private val onCameraUnavailable: () -> Unit,
+    private val analysis: InspectionCameraAnalysis,
 ) : GLSurfaceView.Renderer {
     @Volatile var activeSession: Session? = null
 
@@ -94,6 +110,7 @@ private class ArRenderer(
     private var width = 0
     private var height = 0
     private var lastRotation = -1
+    private var geometryEpoch = 0L
     private var textureRegistered = false
     private var cameraFailed = false
 
@@ -142,6 +159,7 @@ private class ArRenderer(
         if (lastRotation != displayRotation) {
             session.setDisplayGeometry(displayRotation, width, height)
             lastRotation = displayRotation
+            geometryEpoch++
         }
 
         val frame = try {
@@ -154,6 +172,7 @@ private class ArRenderer(
         }
         background.draw(frame)
         updateMarker(frame)
+        analysis.onFrame(frame, session, geometryEpoch)
     }
 
     private fun updateMarker(frame: Frame) {

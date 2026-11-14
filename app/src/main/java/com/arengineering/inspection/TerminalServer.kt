@@ -8,6 +8,7 @@ import org.json.JSONObject
 import org.json.JSONTokener
 import java.net.HttpURLConnection
 import java.net.URI
+import java.net.URLEncoder
 import java.net.URISyntaxException
 
 internal data class TerminalResponse(val status: Int, val body: String) {
@@ -56,6 +57,11 @@ internal class TerminalServer {
     suspend fun profile() = request("/auth/me")
 
     suspend fun equipment() = request("/equipment")
+
+    suspend fun resolveEquipment(code: String, fromPlate: Boolean): TerminalResponse {
+        val kind = if (fromPlate) "nameplate" else "qr"
+        return request("/equipment/resolve?kind=$kind&value=${URLEncoder.encode(code, "UTF-8")}")
+    }
 
     suspend fun history(id: Long) = request("/equipment/$id/reports?limit=20")
 

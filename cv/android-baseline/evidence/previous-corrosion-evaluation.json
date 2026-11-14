@@ -1,0 +1,246 @@
+{
+  "model": "YOLO11n-seg",
+  "classes": [
+    "Corrosion"
+  ],
+  "input_size": 416,
+  "training": {
+    "epochs_done": 18,
+    "batch": 12,
+    "seed": 27,
+    "optimizer": "AdamW",
+    "lr0": 0.001,
+    "selected_by": "Ultralytics validation fitness",
+    "data": "https://universe.roboflow.com/dgs-bdj8h/rust-2.0-susmh-3apgo/dataset/3",
+    "unreadable_train_images_excluded": 2641,
+    "selected_images": {
+      "train": 1222,
+      "val": 113,
+      "test": 77
+    },
+    "selected_groups": {
+      "train": 638,
+      "val": 113,
+      "test": 71
+    },
+    "all_eligible_images": 11657,
+    "all_unique_jpeg_sha256": 8971,
+    "rule": "Group by original base name after removing .rf and extension tokens, or identical JPEG SHA256. Test = official test images, removing their groups from train and val. At most two distinct JPEGs per train group and one per val group. Seed 27."
+  },
+  "rust_test_object_and_instance_metrics": {
+    "metrics/precision(B)": 0.43139864748397516,
+    "metrics/recall(B)": 0.3955431754874652,
+    "metrics/mAP50(B)": 0.39032470207871156,
+    "metrics/mAP50-95(B)": 0.22149372248880433,
+    "metrics/precision(M)": 0.4258463545970852,
+    "metrics/recall(M)": 0.3774373259052925,
+    "metrics/mAP50(M)": 0.36011473284978657,
+    "metrics/mAP50-95(M)": 0.1768318452804236,
+    "fitness": 0.3983255677692279
+  },
+  "rust_test_binary_mask_at_demo_threshold": {
+    "n": 77,
+    "class_names": {
+      "0": "Corrosion"
+    },
+    "confidence": 0.25,
+    "size": 416,
+    "device": "cpu",
+    "image_confusion_any_prediction": {
+      "tp": 76,
+      "fp": 0,
+      "fn": 1,
+      "tn": 0
+    },
+    "n_false_alarm_frames": 0,
+    "image_false_alarm_rate": null,
+    "n_positive_with_overlapping_pixel": 75,
+    "n_positive_no_prediction": 1,
+    "pixel_confusion": {
+      "tp": 5414368,
+      "fp": 1363877,
+      "fn": 2983321,
+      "tn": 21777634
+    },
+    "micro_iou": 0.5546618237278732,
+    "micro_dice": 0.7135465929148084
+  },
+  "ostrava_external_binary_mask_at_demo_threshold": {
+    "source": "https://doi.org/10.5281/zenodo.11235637",
+    "confidence": 0.25,
+    "imgsz": 416,
+    "device": "cpu",
+    "n_test": 15,
+    "class_names": {
+      "0": "Corrosion"
+    },
+    "frames_with_ground_truth": 15,
+    "positive_frames_without_predicted_pixels": 0,
+    "positive_frames_without_overlap": 0,
+    "pixel_confusion": {
+      "tp": 2916833,
+      "fp": 1595427,
+      "fn": 390024,
+      "tn": 10826356
+    },
+    "micro_iou": 0.5949947004294325,
+    "micro_dice": 0.7460773384002312,
+    "pixel_precision": 0.6464239649310989,
+    "pixel_recall": 0.8820559824631062
+  },
+  "external_no_rust_at_demo_threshold": {
+    "source": "https://huggingface.co/datasets/khoaliamle/Corrosion_Rust",
+    "note": "Publisher-labeled no rust, mostly concrete. Not a sample of clean pump frames.",
+    "n": 50,
+    "class_names": {
+      "0": "Corrosion"
+    },
+    "confidence": 0.25,
+    "size": 416,
+    "device": "cpu",
+    "image_confusion_any_prediction": {
+      "tp": 0,
+      "fp": 28,
+      "fn": 0,
+      "tn": 22
+    },
+    "n_false_alarm_frames": 28,
+    "image_false_alarm_rate": 0.56,
+    "n_positive_with_overlapping_pixel": 0,
+    "n_positive_no_prediction": 0,
+    "pixel_confusion": {
+      "tp": 0,
+      "fp": 4215737,
+      "fn": 0,
+      "tn": 12835103
+    },
+    "micro_iou": 0.0,
+    "micro_dice": 0.0
+  },
+  "pump_case_unlabeled_visual_check": {
+    "weights": "corrosion-yolo11n-seg.pt",
+    "confidence_threshold": 0.25,
+    "inference_image_size": 416,
+    "images": [
+      {
+        "file": "6bd1015378aa4382aedc45fe4b7adda4.png",
+        "width": 2528,
+        "height": 1696,
+        "mask_count": 1,
+        "detections": [
+          {
+            "class": "Corrosion",
+            "confidence": 0.7399
+          }
+        ]
+      },
+      {
+        "file": "насос.jpg",
+        "width": 592,
+        "height": 326,
+        "mask_count": 0,
+        "detections": []
+      },
+      {
+        "file": "photo_2026-11-13_12-46-46.jpg",
+        "width": 666,
+        "height": 455,
+        "mask_count": 1,
+        "detections": [
+          {
+            "class": "Corrosion",
+            "confidence": 0.5099
+          }
+        ]
+      }
+    ]
+  },
+  "onnx_equivalence_check_on_cpu": {
+    "checkpoint_sha256": "d26d4220bf0e4bb5815cefda8aeda74c4e58f06da3f719bb7096c61c78e9ddec",
+    "onnx_sha256": "fe23ef5e49b29ec4a3adc97d6ea956bbf576aeb350b36714f0a12aafe92aa3f9",
+    "opset": 17,
+    "static_shapes": {
+      "images": [
+        1,
+        3,
+        416,
+        416
+      ],
+      "output0": [
+        1,
+        37,
+        3549
+      ],
+      "output1": [
+        1,
+        32,
+        104,
+        104
+      ]
+    },
+    "embedded_nms": false,
+    "providers": [
+      "CPUExecutionProvider"
+    ],
+    "confidence": 0.25,
+    "nms_iou": 0.7,
+    "preprocess": "EXIF -> RGB -> 416 square letterbox (114) -> NCHW float32 /255",
+    "raw_abs_tolerance": {
+      "boxes_px": 0.02,
+      "class_score": 2e-05,
+      "mask_coefficients_and_prototypes": 0.001
+    },
+    "required_min_mask_iou": 0.99,
+    "cases": [
+      {
+        "file": "6bd1015378aa4382aedc45fe4b7adda4.png",
+        "shape_hw": [
+          1696,
+          2528
+        ],
+        "max_abs_diff": {
+          "box_coords_input_px": 0.0012359619140625,
+          "class_score": 2.3245811462402344e-06,
+          "mask_coefficients": 5.066394805908203e-06,
+          "mask_prototypes": 2.574920654296875e-05
+        },
+        "pytorch_masks": 1,
+        "onnx_masks": 1,
+        "mask_iou_min": 0.9999975331300632,
+        "changed_mask_pixels": 2
+      },
+      {
+        "file": "насос.jpg",
+        "shape_hw": [
+          326,
+          592
+        ],
+        "max_abs_diff": {
+          "box_coords_input_px": 0.000701904296875,
+          "class_score": 8.344650268554688e-07,
+          "mask_coefficients": 6.139278411865234e-06,
+          "mask_prototypes": 2.384185791015625e-05
+        },
+        "pytorch_masks": 0,
+        "onnx_masks": 0
+      },
+      {
+        "file": "photo_2026-11-13_12-46-46.jpg",
+        "shape_hw": [
+          455,
+          666
+        ],
+        "max_abs_diff": {
+          "box_coords_input_px": 0.0009613037109375,
+          "class_score": 1.1622905731201172e-06,
+          "mask_coefficients": 8.299946784973145e-06,
+          "mask_prototypes": 2.0742416381835938e-05
+        },
+        "pytorch_masks": 1,
+        "onnx_masks": 1,
+        "mask_iou_min": 1.0,
+        "changed_mask_pixels": 0
+      }
+    ]
+  }
+}

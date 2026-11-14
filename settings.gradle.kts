@@ -16,3 +16,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "ArEngineering"
 include(":app")
+include(":cv")
+project(":cv").projectDir = file("cv/android-baseline/android")
