@@ -1,0 +1,9 @@
+{
+  "name": "KST Pump — экраны осмотра",
+  "id": "kst-pump-inspection-local",
+  "api": "1.0.0",
+  "editorType": ["figma"],
+  "main": "code.js",
+  "documentAccess": "dynamic-page",
+  "networkAccess": { "allowedDomains": ["none"] }
+}

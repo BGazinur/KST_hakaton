@@ -38,16 +38,18 @@ def initialize(path):
         db.execute("PRAGMA journal_mode = WAL")
         db.execute("BEGIN IMMEDIATE")
         version = db.execute("PRAGMA user_version").fetchone()[0]
+        if version == 3:
+            return
         if version == 0:
             execute_sql(db, ROOT / "schema.sql")
             seed(db)
-        elif version == 1:
-            execute_sql(db, ROOT / "migrations" / "002.sql")
-        elif version == 2:
-            return
-        else:
+        elif version not in (1, 2):
             raise RuntimeError(f"Unsupported database schema version: {version}")
-        db.execute("PRAGMA user_version = 2")
+        if version == 1:
+            execute_sql(db, ROOT / "migrations" / "002.sql")
+        if version in (1, 2):
+            execute_sql(db, ROOT / "migrations" / "003.sql")
+        db.execute("PRAGMA user_version = 3")
 
 
 def execute_sql(db, path):

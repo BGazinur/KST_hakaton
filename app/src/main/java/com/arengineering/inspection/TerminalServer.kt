@@ -53,6 +53,14 @@ internal class TerminalServer {
 
     suspend fun health() = request("/health", authenticated = false)
 
+    suspend fun profile() = request("/auth/me")
+
+    suspend fun equipment() = request("/equipment")
+
+    suspend fun history(id: Long) = request("/equipment/$id/reports?limit=20")
+
+    suspend fun saveReport(data: JSONObject) = request("/reports", data)
+
     suspend fun login(email: String, password: String): TerminalResponse {
         token = null
         val data = JSONObject().put("email", email).put("password", password)

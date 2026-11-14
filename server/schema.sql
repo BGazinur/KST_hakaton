@@ -205,9 +205,11 @@ CREATE TABLE IF NOT EXISTS reports (
     equipment_snapshot TEXT NOT NULL CHECK (json_valid(equipment_snapshot)),
     telemetry_snapshot TEXT CHECK (telemetry_snapshot IS NULL OR json_valid(telemetry_snapshot)),
     sensors_snapshot TEXT NOT NULL DEFAULT '[]' CHECK (json_valid(sensors_snapshot)),
+    client_request_id TEXT,
     UNIQUE (id, equipment_id)
 );
 CREATE INDEX IF NOT EXISTS reports_equipment ON reports(equipment_id, created_at);
+CREATE UNIQUE INDEX IF NOT EXISTS reports_author_request ON reports(author_id, client_request_id);
 
 CREATE TABLE IF NOT EXISTS report_items (
     report_id INTEGER NOT NULL,

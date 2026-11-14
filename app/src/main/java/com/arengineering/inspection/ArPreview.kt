@@ -108,7 +108,7 @@ private class ArRenderer(
     }
 
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
-        GLES20.glClearColor(0.03f, 0.075f, 0.09f, 1f)
+        GLES20.glClearColor(Night.red, Night.green, Night.blue, 1f)
         background.create()
         textureRegistered = false
     }

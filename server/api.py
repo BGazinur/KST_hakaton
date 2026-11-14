@@ -100,6 +100,7 @@ class ReportInput(BaseModel):
     notes: str = Field(default="", max_length=4000)
     items: list[CheckResult] = Field(min_length=1, max_length=100)
     telemetry_sample_id: int | None = None
+    client_request_id: str | None = Field(default=None, min_length=1, max_length=64)
 
 
 @app.exception_handler(RequestValidationError)
@@ -161,6 +162,16 @@ def resolve_equipment(
     if row is None:
         raise HTTPException(404, "Оборудование с таким идентификатором не найдено.")
     return dict(row)
+
+
+@app.get("/equipment")
+def list_equipment(request: Request, user: User):
+    with connect(request.app.state.db_path) as db:
+        return rows(
+            db,
+            "SELECT id, name, serial_number, asset_tag FROM equipment WHERE parent_id IS NULL ORDER BY id",
+            (),
+        )
 
 
 @app.get("/equipment/{equipment_id}/passport")
@@ -289,6 +300,13 @@ def create_report(data: ReportInput, request: Request, user: User):
 
     with connect(request.app.state.db_path) as db:
         db.execute("BEGIN IMMEDIATE")
+        if data.client_request_id is not None:
+            existing = db.execute(
+                "SELECT id FROM reports WHERE author_id = ? AND client_request_id = ?",
+                (user["id"], data.client_request_id),
+            ).fetchone()
+            if existing is not None:
+                return {"id": existing["id"]}
         # A report keeps the inspected sample, even if replay advances before save.
         snapshot = get_passport(db, data.equipment_id)
         if snapshot is None:
@@ -312,11 +330,13 @@ def create_report(data: ReportInput, request: Request, user: User):
         report_id = db.execute(
             """
             INSERT INTO reports (
-                equipment_id, author_id, created_at, notes, equipment_snapshot, telemetry_snapshot, sensors_snapshot
-            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                equipment_id, author_id, created_at, notes, equipment_snapshot, telemetry_snapshot, sensors_snapshot,
+                client_request_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (data.equipment_id, user["id"], utc_now(), data.notes,
-             encode(snapshot["equipment"]), encode(telemetry) if telemetry is not None else None, encode(sensors)),
+             encode(snapshot["equipment"]), encode(telemetry) if telemetry is not None else None, encode(sensors),
+             data.client_request_id),
         ).lastrowid
         db.executemany(
             """
@@ -333,15 +353,20 @@ def create_report(data: ReportInput, request: Request, user: User):
 
 
 @app.get("/equipment/{equipment_id}/reports")
-def report_history(equipment_id: int, request: Request, user: User):
+def report_history(
+    equipment_id: int,
+    request: Request,
+    user: User,
+    limit: Annotated[int | None, Query(ge=1, le=100)] = None,
+):
     with connect(request.app.state.db_path) as db:
         return rows(
             db,
             """
             SELECT id, equipment_id, author_id, created_at, notes FROM reports
-            WHERE equipment_id = ? AND (? OR author_id = ?) ORDER BY created_at DESC, id DESC
+            WHERE equipment_id = ? AND (? OR author_id = ?) ORDER BY created_at DESC, id DESC LIMIT ?
             """,
-            (equipment_id, user["role"] != "engineer", user["id"]),
+            (equipment_id, user["role"] != "engineer", user["id"], limit or -1),
         )
 
 
