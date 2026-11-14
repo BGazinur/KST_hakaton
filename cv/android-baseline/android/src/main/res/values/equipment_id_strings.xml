@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="equipment_id_searching">Наведите камеру на QR-код или номер оборудования</string>
+    <string name="equipment_id_stabilizing">Удерживайте код в рамке</string>
+    <string name="equipment_id_ambiguous">В рамке несколько разных кодов. Оставьте один</string>
+    <string name="equipment_id_invalid">Код не соответствует формату оборудования</string>
+    <string name="equipment_id_lookup">Код считан. Ищем оборудование</string>
+    <string name="equipment_id_failed">Не удалось прочитать код. Попробуйте снова</string>
+    <string name="equipment_id_not_found">Оборудование с таким кодом не найдено</string>
+    <string name="equipment_id_catalog_ambiguous">В каталоге найдено несколько записей с этим кодом</string>
+</resources>

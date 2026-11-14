@@ -1,0 +1,140 @@
+{
+  "counts": {
+    "seg": {
+      "train": {
+        "unique_images": 24,
+        "positive_images": 20,
+        "instances": 22,
+        "visible_targets": 49
+      },
+      "val": {
+        "unique_images": 6,
+        "positive_images": 5,
+        "instances": 5,
+        "visible_targets": 11
+      },
+      "test": {
+        "unique_images": 3,
+        "positive_images": 3,
+        "instances": 3,
+        "visible_targets": 8
+      }
+    },
+    "pose": {
+      "train": {
+        "unique_images": 27,
+        "positive_images": 23,
+        "instances": 25,
+        "visible_targets": 55
+      },
+      "val": {
+        "unique_images": 6,
+        "positive_images": 5,
+        "instances": 5,
+        "visible_targets": 11
+      },
+      "test": {
+        "unique_images": 3,
+        "positive_images": 3,
+        "instances": 3,
+        "visible_targets": 8
+      }
+    }
+  },
+  "new_manually_traced_images": 7,
+  "new_silhouette_point_geometry": [
+    {
+      "id": "rf_0103",
+      "zone": "frame",
+      "inside_silhouette": true
+    },
+    {
+      "id": "rf_0103",
+      "zone": "casing",
+      "inside_silhouette": true
+    },
+    {
+      "id": "rf_0103",
+      "zone": "terminal_box",
+      "inside_silhouette": true
+    },
+    {
+      "id": "rf_0151",
+      "zone": "casing",
+      "inside_silhouette": true
+    },
+    {
+      "id": "rf_0151",
+      "zone": "terminal_box",
+      "inside_silhouette": true
+    },
+    {
+      "id": "rf_0257",
+      "zone": "frame",
+      "inside_silhouette": true
+    },
+    {
+      "id": "rf_0257",
+      "zone": "terminal_box",
+      "inside_silhouette": true
+    },
+    {
+      "id": "rf_0357",
+      "zone": "casing",
+      "inside_silhouette": true
+    },
+    {
+      "id": "rf_0325",
+      "zone": "frame",
+      "inside_silhouette": true
+    },
+    {
+      "id": "rf_0325",
+      "zone": "casing",
+      "inside_silhouette": true
+    },
+    {
+      "id": "rf_0130",
+      "zone": "frame",
+      "inside_silhouette": true
+    },
+    {
+      "id": "rf_0130",
+      "zone": "casing",
+      "inside_silhouette": true
+    },
+    {
+      "id": "rf_0130",
+      "zone": "terminal_box",
+      "inside_silhouette": true
+    },
+    {
+      "id": "rf_0615",
+      "zone": "frame",
+      "inside_silhouette": true
+    },
+    {
+      "id": "rf_0615",
+      "zone": "casing",
+      "inside_silhouette": true
+    },
+    {
+      "id": "rf_0615",
+      "zone": "terminal_box",
+      "inside_silhouette": true
+    }
+  ],
+  "rejected_photo_origin": [
+    "rf_0629 and other pump1/pump4 workshop renders suspected; excluded from v5 real-photo learning"
+  ],
+  "v3_test_retired_into_training": true,
+  "new_test": [
+    "rf_0103",
+    "rf_0151",
+    "rf_0615"
+  ],
+  "model_selection": "Four best/last pairings on runtime VAL only, then frozen before test",
+  "point_semantics": "Approximate visible navigation regions; no metric 3D correspondence",
+  "quality": "AI visual review, not engineer-certified annotation; source photographic origin not independently certified",
+  "bulk_weak_masks_used": false
+}

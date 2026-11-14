@@ -1,0 +1,1146 @@
+{
+  "schema_version": 1,
+  "split": "test",
+  "manifest": "C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\work\\pump_v5_data\\prepared\\seg-manifest.json",
+  "manifest_sha256": "142022a86268c2adfb9a3ef073907de9518f3fc810b3eeab8c2b199d50ffc656",
+  "models": {
+    "seg": "C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\outputs\\pump-stream\\models\\pump-seg.pt",
+    "seg_sha256": "e0522c4a943b36f2b36235f5280aa7f0077144551a536ee14902a3c271fa30fa",
+    "pose": "C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\outputs\\pump-stream\\models\\pump-pose.pt",
+    "pose_sha256": "770f35716de942e178b4c862410a42fa619d175ff04a3c89f8716f1a7aaba322"
+  },
+  "runtime": {
+    "ultralytics": "8.3.230",
+    "torch": "2.7.1+cu118",
+    "device": "cpu",
+    "threads": 2
+  },
+  "parameters": {
+    "imgsz": 416,
+    "seg_conf": 0.35,
+    "pose_conf": 0.3,
+    "keypoint_conf": 0.65,
+    "nms": 0.7,
+    "max_det": 10,
+    "min_area": 0.035,
+    "association_iou": 0.55,
+    "mask_tolerance": 0.012,
+    "class_id": 0
+  },
+  "method": {
+    "mask_source": "Ultralytics retina_masks=True masks.data full image >0.5; never masks.xy",
+    "matching": "Hungarian maximum total bbox IoU, drop pairs below0.3; recall computed independently at0.5; no mask-IoU oracle selection",
+    "keypoint_order": [
+      "frame",
+      "casing",
+      "terminal_box"
+    ],
+    "pck": "Euclidean raw-pixel error / GT polygon-bbox diagonal <=0.1, misses count as failures",
+    "withinAnnotatedRegion": "Point-in-annotated-bbox strict proxy; reference patch is not necessarily a full physical-part mask; misses count as failures",
+    "null_reference": "Unconfirmed/unknown/occluded, not necessarily physically absent; no zone false-positive rate is inferred",
+    "gating": "Model-candidate and Android-v1 single-equipment zone policies reported separately; full-resolution mask tolerance approximates native RLE256 geometry",
+    "orientation": "Encoded pixel orientation via PIL RGB, no EXIF transform; images passed as BGR arrays",
+    "limitations": "AI-assisted approximate annotations; still-image metric only; no temporal/AR/device performance claim"
+  },
+  "primary_point_policy": "runtime_single_equipment",
+  "primary_point_metrics": {
+    "confirmedVisibleKeypoints": 8,
+    "predictedForConfirmedVisible": 5,
+    "missingConfirmedVisible": 3,
+    "pck10Correct": 1,
+    "withinAnnotatedRegionCount": 1,
+    "emittedZones": 6,
+    "predictedZonesWithoutConfirmedGT": 1,
+    "predictedZonesOnMatchedNullReference": 1,
+    "predictedZonesOnUnmatchedEquipment": 0,
+    "PCK@0.1_bbox_diagonal": 0.125,
+    "withinAnnotatedRegionRate_allConfirmedVisible": 0.125,
+    "meanError_predictedConfirmedVisibleOnly": 0.14026634771597293,
+    "framesWithZoneSuppression": 0,
+    "unconfirmed_is_not_false_positive_rate": true
+  },
+  "overall": {
+    "nImages": 3,
+    "nGTInstances": 3,
+    "nAcceptedPredictions": 3,
+    "matchedGT_boxIoU03": 3,
+    "matchedGT_boxIoU05": 3,
+    "detectionRecall_boxIoU05": 1.0,
+    "instanceForegroundIoU_includingMissesZero": 0.49348468173294213,
+    "instanceForegroundIoU_matchedOnly": 0.49348468173294213,
+    "multiDetectionFrames": 0,
+    "runtimeStatusCounts": {
+      "EQUIPMENT_FOUND": 3,
+      "EQUIPMENT_NOT_FOUND": 0,
+      "AMBIGUOUS": 0
+    },
+    "negativeFrames": 0,
+    "negativeFPFrames": 0,
+    "negativeFPFrameRate": null,
+    "model_candidates": {
+      "confirmedVisibleKeypoints": 8,
+      "predictedForConfirmedVisible": 5,
+      "missingConfirmedVisible": 3,
+      "pck10Correct": 1,
+      "withinAnnotatedRegionCount": 1,
+      "emittedZones": 6,
+      "predictedZonesWithoutConfirmedGT": 1,
+      "predictedZonesOnMatchedNullReference": 1,
+      "predictedZonesOnUnmatchedEquipment": 0,
+      "PCK@0.1_bbox_diagonal": 0.125,
+      "withinAnnotatedRegionRate_allConfirmedVisible": 0.125,
+      "meanError_predictedConfirmedVisibleOnly": 0.14026634771597293,
+      "framesWithZoneSuppression": 0,
+      "unconfirmed_is_not_false_positive_rate": true
+    },
+    "runtime_single_equipment": {
+      "confirmedVisibleKeypoints": 8,
+      "predictedForConfirmedVisible": 5,
+      "missingConfirmedVisible": 3,
+      "pck10Correct": 1,
+      "withinAnnotatedRegionCount": 1,
+      "emittedZones": 6,
+      "predictedZonesWithoutConfirmedGT": 1,
+      "predictedZonesOnMatchedNullReference": 1,
+      "predictedZonesOnUnmatchedEquipment": 0,
+      "PCK@0.1_bbox_diagonal": 0.125,
+      "withinAnnotatedRegionRate_allConfirmedVisible": 0.125,
+      "meanError_predictedConfirmedVisibleOnly": 0.14026634771597293,
+      "framesWithZoneSuppression": 0,
+      "unconfirmed_is_not_false_positive_rate": true
+    },
+    "temporalStabilityMeasured": false,
+    "arTrackingMeasured": false
+  },
+  "per_group": {
+    "curated_scene_103": {
+      "nImages": 1,
+      "nGTInstances": 1,
+      "nAcceptedPredictions": 1,
+      "matchedGT_boxIoU03": 1,
+      "matchedGT_boxIoU05": 1,
+      "detectionRecall_boxIoU05": 1.0,
+      "instanceForegroundIoU_includingMissesZero": 0.5745993730311882,
+      "instanceForegroundIoU_matchedOnly": 0.5745993730311882,
+      "multiDetectionFrames": 0,
+      "runtimeStatusCounts": {
+        "EQUIPMENT_FOUND": 1,
+        "EQUIPMENT_NOT_FOUND": 0,
+        "AMBIGUOUS": 0
+      },
+      "negativeFrames": 0,
+      "negativeFPFrames": 0,
+      "negativeFPFrameRate": null,
+      "model_candidates": {
+        "confirmedVisibleKeypoints": 3,
+        "predictedForConfirmedVisible": 2,
+        "missingConfirmedVisible": 1,
+        "pck10Correct": 0,
+        "withinAnnotatedRegionCount": 0,
+        "emittedZones": 2,
+        "predictedZonesWithoutConfirmedGT": 0,
+        "predictedZonesOnMatchedNullReference": 0,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "PCK@0.1_bbox_diagonal": 0.0,
+        "withinAnnotatedRegionRate_allConfirmedVisible": 0.0,
+        "meanError_predictedConfirmedVisibleOnly": 0.14714832665669314,
+        "framesWithZoneSuppression": 0,
+        "unconfirmed_is_not_false_positive_rate": true
+      },
+      "runtime_single_equipment": {
+        "confirmedVisibleKeypoints": 3,
+        "predictedForConfirmedVisible": 2,
+        "missingConfirmedVisible": 1,
+        "pck10Correct": 0,
+        "withinAnnotatedRegionCount": 0,
+        "emittedZones": 2,
+        "predictedZonesWithoutConfirmedGT": 0,
+        "predictedZonesOnMatchedNullReference": 0,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "PCK@0.1_bbox_diagonal": 0.0,
+        "withinAnnotatedRegionRate_allConfirmedVisible": 0.0,
+        "meanError_predictedConfirmedVisibleOnly": 0.14714832665669314,
+        "framesWithZoneSuppression": 0,
+        "unconfirmed_is_not_false_positive_rate": true
+      },
+      "temporalStabilityMeasured": false,
+      "arTrackingMeasured": false
+    },
+    "curated_scene_151": {
+      "nImages": 1,
+      "nGTInstances": 1,
+      "nAcceptedPredictions": 1,
+      "matchedGT_boxIoU03": 1,
+      "matchedGT_boxIoU05": 1,
+      "detectionRecall_boxIoU05": 1.0,
+      "instanceForegroundIoU_includingMissesZero": 0.5055200522003155,
+      "instanceForegroundIoU_matchedOnly": 0.5055200522003155,
+      "multiDetectionFrames": 0,
+      "runtimeStatusCounts": {
+        "EQUIPMENT_FOUND": 1,
+        "EQUIPMENT_NOT_FOUND": 0,
+        "AMBIGUOUS": 0
+      },
+      "negativeFrames": 0,
+      "negativeFPFrames": 0,
+      "negativeFPFrameRate": null,
+      "model_candidates": {
+        "confirmedVisibleKeypoints": 2,
+        "predictedForConfirmedVisible": 1,
+        "missingConfirmedVisible": 1,
+        "pck10Correct": 0,
+        "withinAnnotatedRegionCount": 0,
+        "emittedZones": 2,
+        "predictedZonesWithoutConfirmedGT": 1,
+        "predictedZonesOnMatchedNullReference": 1,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "PCK@0.1_bbox_diagonal": 0.0,
+        "withinAnnotatedRegionRate_allConfirmedVisible": 0.0,
+        "meanError_predictedConfirmedVisibleOnly": 0.10314505625616159,
+        "framesWithZoneSuppression": 0,
+        "unconfirmed_is_not_false_positive_rate": true
+      },
+      "runtime_single_equipment": {
+        "confirmedVisibleKeypoints": 2,
+        "predictedForConfirmedVisible": 1,
+        "missingConfirmedVisible": 1,
+        "pck10Correct": 0,
+        "withinAnnotatedRegionCount": 0,
+        "emittedZones": 2,
+        "predictedZonesWithoutConfirmedGT": 1,
+        "predictedZonesOnMatchedNullReference": 1,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "PCK@0.1_bbox_diagonal": 0.0,
+        "withinAnnotatedRegionRate_allConfirmedVisible": 0.0,
+        "meanError_predictedConfirmedVisibleOnly": 0.10314505625616159,
+        "framesWithZoneSuppression": 0,
+        "unconfirmed_is_not_false_positive_rate": true
+      },
+      "temporalStabilityMeasured": false,
+      "arTrackingMeasured": false
+    },
+    "curated_scene_615": {
+      "nImages": 1,
+      "nGTInstances": 1,
+      "nAcceptedPredictions": 1,
+      "matchedGT_boxIoU03": 1,
+      "matchedGT_boxIoU05": 1,
+      "detectionRecall_boxIoU05": 1.0,
+      "instanceForegroundIoU_includingMissesZero": 0.40033461996732284,
+      "instanceForegroundIoU_matchedOnly": 0.40033461996732284,
+      "multiDetectionFrames": 0,
+      "runtimeStatusCounts": {
+        "EQUIPMENT_FOUND": 1,
+        "EQUIPMENT_NOT_FOUND": 0,
+        "AMBIGUOUS": 0
+      },
+      "negativeFrames": 0,
+      "negativeFPFrames": 0,
+      "negativeFPFrameRate": null,
+      "model_candidates": {
+        "confirmedVisibleKeypoints": 3,
+        "predictedForConfirmedVisible": 2,
+        "missingConfirmedVisible": 1,
+        "pck10Correct": 1,
+        "withinAnnotatedRegionCount": 1,
+        "emittedZones": 2,
+        "predictedZonesWithoutConfirmedGT": 0,
+        "predictedZonesOnMatchedNullReference": 0,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "PCK@0.1_bbox_diagonal": 0.3333333333333333,
+        "withinAnnotatedRegionRate_allConfirmedVisible": 0.3333333333333333,
+        "meanError_predictedConfirmedVisibleOnly": 0.15194501450515838,
+        "framesWithZoneSuppression": 0,
+        "unconfirmed_is_not_false_positive_rate": true
+      },
+      "runtime_single_equipment": {
+        "confirmedVisibleKeypoints": 3,
+        "predictedForConfirmedVisible": 2,
+        "missingConfirmedVisible": 1,
+        "pck10Correct": 1,
+        "withinAnnotatedRegionCount": 1,
+        "emittedZones": 2,
+        "predictedZonesWithoutConfirmedGT": 0,
+        "predictedZonesOnMatchedNullReference": 0,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "PCK@0.1_bbox_diagonal": 0.3333333333333333,
+        "withinAnnotatedRegionRate_allConfirmedVisible": 0.3333333333333333,
+        "meanError_predictedConfirmedVisibleOnly": 0.15194501450515838,
+        "framesWithZoneSuppression": 0,
+        "unconfirmed_is_not_false_positive_rate": true
+      },
+      "temporalStabilityMeasured": false,
+      "arTrackingMeasured": false
+    }
+  },
+  "group_overlap_across_manifest_splits": {},
+  "skipped_rows": [],
+  "images": [
+    {
+      "id": "rf_0103",
+      "group": "curated_scene_103",
+      "split": "test",
+      "quality": "visually_reviewed_approximate_photo",
+      "image": "C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\work\\pump_v3_data\\industrial\\images\\combined3class_valve_pump_v4i_yolov11_-13-_jpeg.rf.22c1e9ca243180303bd40f9f38575d96.jpg",
+      "width": 640,
+      "height": 640,
+      "image_sha256": "57751ad4a5e12c8cb06cfa43034893abbbc70ec03298af3c1d186938d2d83d17",
+      "explicit_negative": false,
+      "n_gt": 1,
+      "n_predictions": 1,
+      "n_matches_iou50": 1,
+      "runtime_status": "EQUIPMENT_FOUND",
+      "ground_truth_diagnostics": [
+        {
+          "gt_instance": 0,
+          "bbox": [
+            38.4,
+            102.4,
+            512.0,
+            640.0
+          ],
+          "mask_foreground_pixels": 171629,
+          "matched_prediction": 0,
+          "matched_bbox_iou": 0.7331959067178797,
+          "detected_box_iou50": true,
+          "mask_iou": 0.5745993730311882
+        }
+      ],
+      "model_candidates": {
+        "confirmedVisibleKeypoints": 3,
+        "predictedForConfirmedVisible": 2,
+        "missingConfirmedVisible": 1,
+        "pck10Correct": 0,
+        "withinAnnotatedRegionCount": 0,
+        "emittedZones": 2,
+        "predictedZonesWithoutConfirmedGT": 0,
+        "predictedZonesOnMatchedNullReference": 0,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "zonesSuppressedByMultiEquipmentPolicy": false,
+        "details": [
+          {
+            "gt_instance": 0,
+            "zone": "frame",
+            "gt": {
+              "point": [
+                0.38,
+                0.78
+              ],
+              "bbox": [
+                0.31,
+                0.71,
+                0.45,
+                0.85
+              ]
+            },
+            "predicted": {
+              "point": [
+                0.4887833595275879,
+                0.8868785858154297
+              ],
+              "confidence": 0.8049439787864685
+            },
+            "error_bbox_diagonal": 0.1362276503601296,
+            "pck10": false,
+            "withinAnnotatedRegion": false
+          },
+          {
+            "gt_instance": 0,
+            "zone": "casing",
+            "gt": {
+              "point": [
+                0.65,
+                0.59
+              ],
+              "bbox": [
+                0.58,
+                0.52,
+                0.72,
+                0.66
+              ]
+            },
+            "predicted": null,
+            "error_bbox_diagonal": null,
+            "pck10": false,
+            "withinAnnotatedRegion": false
+          },
+          {
+            "gt_instance": 0,
+            "zone": "terminal_box",
+            "gt": {
+              "point": [
+                0.29,
+                0.2
+              ],
+              "bbox": [
+                0.22,
+                0.13,
+                0.36,
+                0.27
+              ]
+            },
+            "predicted": {
+              "point": [
+                0.23777520656585693,
+                0.3690703630447388
+              ],
+              "confidence": 0.6766297221183777
+            },
+            "error_bbox_diagonal": 0.15806900295325668,
+            "pck10": false,
+            "withinAnnotatedRegion": false
+          }
+        ]
+      },
+      "runtime_single_equipment": {
+        "confirmedVisibleKeypoints": 3,
+        "predictedForConfirmedVisible": 2,
+        "missingConfirmedVisible": 1,
+        "pck10Correct": 0,
+        "withinAnnotatedRegionCount": 0,
+        "emittedZones": 2,
+        "predictedZonesWithoutConfirmedGT": 0,
+        "predictedZonesOnMatchedNullReference": 0,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "zonesSuppressedByMultiEquipmentPolicy": false,
+        "details": [
+          {
+            "gt_instance": 0,
+            "zone": "frame",
+            "gt": {
+              "point": [
+                0.38,
+                0.78
+              ],
+              "bbox": [
+                0.31,
+                0.71,
+                0.45,
+                0.85
+              ]
+            },
+            "predicted": {
+              "point": [
+                0.4887833595275879,
+                0.8868785858154297
+              ],
+              "confidence": 0.8049439787864685
+            },
+            "error_bbox_diagonal": 0.1362276503601296,
+            "pck10": false,
+            "withinAnnotatedRegion": false
+          },
+          {
+            "gt_instance": 0,
+            "zone": "casing",
+            "gt": {
+              "point": [
+                0.65,
+                0.59
+              ],
+              "bbox": [
+                0.58,
+                0.52,
+                0.72,
+                0.66
+              ]
+            },
+            "predicted": null,
+            "error_bbox_diagonal": null,
+            "pck10": false,
+            "withinAnnotatedRegion": false
+          },
+          {
+            "gt_instance": 0,
+            "zone": "terminal_box",
+            "gt": {
+              "point": [
+                0.29,
+                0.2
+              ],
+              "bbox": [
+                0.22,
+                0.13,
+                0.36,
+                0.27
+              ]
+            },
+            "predicted": {
+              "point": [
+                0.23777520656585693,
+                0.3690703630447388
+              ],
+              "confidence": 0.6766297221183777
+            },
+            "error_bbox_diagonal": 0.15806900295325668,
+            "pck10": false,
+            "withinAnnotatedRegion": false
+          }
+        ]
+      },
+      "accepted_predictions": [
+        {
+          "prediction_index": 0,
+          "bbox": [
+            1.6703914403915405,
+            110.41527557373047,
+            639.657470703125,
+            639.1375732421875
+          ],
+          "confidence": 0.9564329981803894,
+          "area_fraction": 0.8235302598402844,
+          "zones": {
+            "frame": {
+              "point": [
+                0.4887833595275879,
+                0.8868785858154297
+              ],
+              "confidence": 0.8049439787864685
+            },
+            "terminal_box": {
+              "point": [
+                0.23777520656585693,
+                0.3690703630447388
+              ],
+              "confidence": 0.6766297221183777
+            }
+          },
+          "zone_gate_diagnostics": [
+            {
+              "id": "frame",
+              "reason": "accepted"
+            },
+            {
+              "id": "casing",
+              "reason": "confidence_or_nonfinite"
+            },
+            {
+              "id": "terminal_box",
+              "reason": "accepted"
+            }
+          ],
+          "pose_index": 0,
+          "association_bbox_iou": 0.8207936028474997,
+          "mask_foreground_pixels": 241253,
+          "mask_sha256_row_major_uint8": "bdda5b525bc45354a5de6605dae6d3fbe349d3c36495b7e11090466a10b11e23"
+        }
+      ],
+      "rejected_segmentation_predictions": [],
+      "raw_poses_above_model_threshold": [
+        {
+          "bbox": [
+            2.952317476272583,
+            90.2217025756836,
+            544.303466796875,
+            640.0
+          ],
+          "confidence": 0.8263828158378601,
+          "keypoints": [
+            [
+              312.82135009765625,
+              567.602294921875,
+              0.8049439787864685
+            ],
+            [
+              239.49234008789062,
+              388.36737060546875,
+              0.6024196743965149
+            ],
+            [
+              152.17613220214844,
+              236.2050323486328,
+              0.6766297221183777
+            ]
+          ]
+        },
+        {
+          "bbox": [
+            6.572031021118164,
+            221.9028778076172,
+            640.0,
+            640.0
+          ],
+          "confidence": 0.38962745666503906,
+          "keypoints": [
+            [
+              363.556640625,
+              585.42529296875,
+              0.6975727677345276
+            ],
+            [
+              360.9319152832031,
+              458.7301025390625,
+              0.46544358134269714
+            ],
+            [
+              370.6029357910156,
+              395.2525939941406,
+              0.42608681321144104
+            ]
+          ]
+        }
+      ],
+      "desktop_predict_pair_ms": 163.32320000037726
+    },
+    {
+      "id": "rf_0151",
+      "group": "curated_scene_151",
+      "split": "test",
+      "quality": "visually_reviewed_approximate_photo",
+      "image": "C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\work\\pump_v3_data\\industrial\\images\\combined3class_valve_pump_v4i_yolov11_-_jpg.rf.f6350a7adb6f78acf3900cd952508514.jpg",
+      "width": 640,
+      "height": 640,
+      "image_sha256": "60bb1b6fd8b303d2b250349815c4f3e833efd7d964b37ffc7b433856fdeaf3f3",
+      "explicit_negative": false,
+      "n_gt": 1,
+      "n_predictions": 1,
+      "n_matches_iou50": 1,
+      "runtime_status": "EQUIPMENT_FOUND",
+      "ground_truth_diagnostics": [
+        {
+          "gt_instance": 0,
+          "bbox": [
+            25.6,
+            140.8,
+            582.4,
+            640.0
+          ],
+          "mask_foreground_pixels": 183832,
+          "matched_prediction": 0,
+          "matched_bbox_iou": 0.6957792679675423,
+          "detected_box_iou50": true,
+          "mask_iou": 0.5055200522003155
+        }
+      ],
+      "model_candidates": {
+        "confirmedVisibleKeypoints": 2,
+        "predictedForConfirmedVisible": 1,
+        "missingConfirmedVisible": 1,
+        "pck10Correct": 0,
+        "withinAnnotatedRegionCount": 0,
+        "emittedZones": 2,
+        "predictedZonesWithoutConfirmedGT": 1,
+        "predictedZonesOnMatchedNullReference": 1,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "zonesSuppressedByMultiEquipmentPolicy": false,
+        "details": [
+          {
+            "gt_instance": 0,
+            "zone": "casing",
+            "gt": {
+              "point": [
+                0.78,
+                0.43
+              ],
+              "bbox": [
+                0.71,
+                0.36,
+                0.85,
+                0.5
+              ]
+            },
+            "predicted": {
+              "point": [
+                0.7919044017791748,
+                0.3100684404373169
+              ],
+              "confidence": 0.8777493834495544
+            },
+            "error_bbox_diagonal": 0.10314505625616159,
+            "pck10": false,
+            "withinAnnotatedRegion": false
+          },
+          {
+            "gt_instance": 0,
+            "zone": "terminal_box",
+            "gt": {
+              "point": [
+                0.4,
+                0.36
+              ],
+              "bbox": [
+                0.33,
+                0.29,
+                0.47,
+                0.43
+              ]
+            },
+            "predicted": null,
+            "error_bbox_diagonal": null,
+            "pck10": false,
+            "withinAnnotatedRegion": false
+          }
+        ]
+      },
+      "runtime_single_equipment": {
+        "confirmedVisibleKeypoints": 2,
+        "predictedForConfirmedVisible": 1,
+        "missingConfirmedVisible": 1,
+        "pck10Correct": 0,
+        "withinAnnotatedRegionCount": 0,
+        "emittedZones": 2,
+        "predictedZonesWithoutConfirmedGT": 1,
+        "predictedZonesOnMatchedNullReference": 1,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "zonesSuppressedByMultiEquipmentPolicy": false,
+        "details": [
+          {
+            "gt_instance": 0,
+            "zone": "casing",
+            "gt": {
+              "point": [
+                0.78,
+                0.43
+              ],
+              "bbox": [
+                0.71,
+                0.36,
+                0.85,
+                0.5
+              ]
+            },
+            "predicted": {
+              "point": [
+                0.7919044017791748,
+                0.3100684404373169
+              ],
+              "confidence": 0.8777493834495544
+            },
+            "error_bbox_diagonal": 0.10314505625616159,
+            "pck10": false,
+            "withinAnnotatedRegion": false
+          },
+          {
+            "gt_instance": 0,
+            "zone": "terminal_box",
+            "gt": {
+              "point": [
+                0.4,
+                0.36
+              ],
+              "bbox": [
+                0.33,
+                0.29,
+                0.47,
+                0.43
+              ]
+            },
+            "predicted": null,
+            "error_bbox_diagonal": null,
+            "pck10": false,
+            "withinAnnotatedRegion": false
+          }
+        ]
+      },
+      "accepted_predictions": [
+        {
+          "prediction_index": 0,
+          "bbox": [
+            0.0,
+            17.763296127319336,
+            639.6502075195312,
+            637.9469604492188
+          ],
+          "confidence": 0.7312321066856384,
+          "area_fraction": 0.9685073476165192,
+          "zones": {
+            "frame": {
+              "point": [
+                0.6196643829345703,
+                0.5144299030303955
+              ],
+              "confidence": 0.8761255741119385
+            },
+            "casing": {
+              "point": [
+                0.7919044017791748,
+                0.3100684404373169
+              ],
+              "confidence": 0.8777493834495544
+            }
+          },
+          "zone_gate_diagnostics": [
+            {
+              "id": "frame",
+              "reason": "accepted"
+            },
+            {
+              "id": "casing",
+              "reason": "accepted"
+            },
+            {
+              "id": "terminal_box",
+              "reason": "confidence_or_nonfinite"
+            }
+          ],
+          "pose_index": 1,
+          "association_bbox_iou": 0.625549415589889,
+          "mask_foreground_pixels": 275320,
+          "mask_sha256_row_major_uint8": "a0be1415ad82e30a231b4f835a4899834edbaa4eb7813ce236f5e3701309853d"
+        }
+      ],
+      "rejected_segmentation_predictions": [],
+      "raw_poses_above_model_threshold": [
+        {
+          "bbox": [
+            0.19080530107021332,
+            151.63067626953125,
+            410.7064208984375,
+            640.0
+          ],
+          "confidence": 0.920569121837616,
+          "keypoints": [
+            [
+              125.07852935791016,
+              552.9959106445312,
+              0.7445824146270752
+            ],
+            [
+              127.75984954833984,
+              378.4776916503906,
+              0.42248496413230896
+            ],
+            [
+              203.69741821289062,
+              233.52877807617188,
+              0.5090925097465515
+            ]
+          ]
+        },
+        {
+          "bbox": [
+            107.9169692993164,
+            0.0,
+            638.829833984375,
+            496.2886047363281
+          ],
+          "confidence": 0.38080915808677673,
+          "keypoints": [
+            [
+              396.585205078125,
+              329.2351379394531,
+              0.8761255741119385
+            ],
+            [
+              506.8188171386719,
+              198.4438018798828,
+              0.8777493834495544
+            ],
+            [
+              289.44305419921875,
+              152.500244140625,
+              0.5688717365264893
+            ]
+          ]
+        }
+      ],
+      "desktop_predict_pair_ms": 109.64069999863568
+    },
+    {
+      "id": "rf_0615",
+      "group": "curated_scene_615",
+      "split": "test",
+      "quality": "visually_reviewed_approximate_photo",
+      "image": "C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\work\\pump_v3_data\\industrial\\images\\combined3class_valve_pump_v4i_yolov11_smart-pumps-scaled_jpg.rf.45ea23e53d5e9ff9389513992abba2bc.jpg",
+      "width": 640,
+      "height": 640,
+      "image_sha256": "13bb344572ab894c4e9114b90974838a5067a976d22ffe56995217ca904ba5ce",
+      "explicit_negative": false,
+      "n_gt": 1,
+      "n_predictions": 1,
+      "n_matches_iou50": 1,
+      "runtime_status": "EQUIPMENT_FOUND",
+      "ground_truth_diagnostics": [
+        {
+          "gt_instance": 0,
+          "bbox": [
+            32.0,
+            102.4,
+            480.0,
+            640.0
+          ],
+          "mask_foreground_pixels": 140725,
+          "matched_prediction": 0,
+          "matched_bbox_iou": 0.5238801958555288,
+          "detected_box_iou50": true,
+          "mask_iou": 0.40033461996732284
+        }
+      ],
+      "model_candidates": {
+        "confirmedVisibleKeypoints": 3,
+        "predictedForConfirmedVisible": 2,
+        "missingConfirmedVisible": 1,
+        "pck10Correct": 1,
+        "withinAnnotatedRegionCount": 1,
+        "emittedZones": 2,
+        "predictedZonesWithoutConfirmedGT": 0,
+        "predictedZonesOnMatchedNullReference": 0,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "zonesSuppressedByMultiEquipmentPolicy": false,
+        "details": [
+          {
+            "gt_instance": 0,
+            "zone": "frame",
+            "gt": {
+              "point": [
+                0.37,
+                0.91
+              ],
+              "bbox": [
+                0.3,
+                0.84,
+                0.44,
+                0.98
+              ]
+            },
+            "predicted": null,
+            "error_bbox_diagonal": null,
+            "pck10": false,
+            "withinAnnotatedRegion": false
+          },
+          {
+            "gt_instance": 0,
+            "zone": "casing",
+            "gt": {
+              "point": [
+                0.65,
+                0.4
+              ],
+              "bbox": [
+                0.58,
+                0.33,
+                0.72,
+                0.47
+              ]
+            },
+            "predicted": {
+              "point": [
+                0.6175678253173829,
+                0.4375894546508789
+              ],
+              "confidence": 0.9526724815368652
+            },
+            "error_bbox_diagonal": 0.04540451485865965,
+            "pck10": true,
+            "withinAnnotatedRegion": true
+          },
+          {
+            "gt_instance": 0,
+            "zone": "terminal_box",
+            "gt": {
+              "point": [
+                0.4,
+                0.23
+              ],
+              "bbox": [
+                0.33,
+                0.16,
+                0.47,
+                0.3
+              ]
+            },
+            "predicted": {
+              "point": [
+                0.3600553035736084,
+                0.5098001956939697
+              ],
+              "confidence": 0.6984602808952332
+            },
+            "error_bbox_diagonal": 0.2584855141516571,
+            "pck10": false,
+            "withinAnnotatedRegion": false
+          }
+        ]
+      },
+      "runtime_single_equipment": {
+        "confirmedVisibleKeypoints": 3,
+        "predictedForConfirmedVisible": 2,
+        "missingConfirmedVisible": 1,
+        "pck10Correct": 1,
+        "withinAnnotatedRegionCount": 1,
+        "emittedZones": 2,
+        "predictedZonesWithoutConfirmedGT": 0,
+        "predictedZonesOnMatchedNullReference": 0,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "zonesSuppressedByMultiEquipmentPolicy": false,
+        "details": [
+          {
+            "gt_instance": 0,
+            "zone": "frame",
+            "gt": {
+              "point": [
+                0.37,
+                0.91
+              ],
+              "bbox": [
+                0.3,
+                0.84,
+                0.44,
+                0.98
+              ]
+            },
+            "predicted": null,
+            "error_bbox_diagonal": null,
+            "pck10": false,
+            "withinAnnotatedRegion": false
+          },
+          {
+            "gt_instance": 0,
+            "zone": "casing",
+            "gt": {
+              "point": [
+                0.65,
+                0.4
+              ],
+              "bbox": [
+                0.58,
+                0.33,
+                0.72,
+                0.47
+              ]
+            },
+            "predicted": {
+              "point": [
+                0.6175678253173829,
+                0.4375894546508789
+              ],
+              "confidence": 0.9526724815368652
+            },
+            "error_bbox_diagonal": 0.04540451485865965,
+            "pck10": true,
+            "withinAnnotatedRegion": true
+          },
+          {
+            "gt_instance": 0,
+            "zone": "terminal_box",
+            "gt": {
+              "point": [
+                0.4,
+                0.23
+              ],
+              "bbox": [
+                0.33,
+                0.16,
+                0.47,
+                0.3
+              ]
+            },
+            "predicted": {
+              "point": [
+                0.3600553035736084,
+                0.5098001956939697
+              ],
+              "confidence": 0.6984602808952332
+            },
+            "error_bbox_diagonal": 0.2584855141516571,
+            "pck10": false,
+            "withinAnnotatedRegion": false
+          }
+        ]
+      },
+      "accepted_predictions": [
+        {
+          "prediction_index": 0,
+          "bbox": [
+            5.084416389465332,
+            0.0,
+            595.0753173828125,
+            524.8257446289062
+          ],
+          "confidence": 0.5133243203163147,
+          "area_fraction": 0.7559629246535955,
+          "zones": {
+            "casing": {
+              "point": [
+                0.6175678253173829,
+                0.4375894546508789
+              ],
+              "confidence": 0.9526724815368652
+            },
+            "terminal_box": {
+              "point": [
+                0.3600553035736084,
+                0.5098001956939697
+              ],
+              "confidence": 0.6984602808952332
+            }
+          },
+          "zone_gate_diagnostics": [
+            {
+              "id": "frame",
+              "reason": "outside_equipment_bbox"
+            },
+            {
+              "id": "casing",
+              "reason": "accepted"
+            },
+            {
+              "id": "terminal_box",
+              "reason": "accepted"
+            }
+          ],
+          "pose_index": 0,
+          "association_bbox_iou": 0.6321555876531826,
+          "mask_foreground_pixels": 251814,
+          "mask_sha256_row_major_uint8": "d4266c8c801534544a60af142e52a759e42b5c8a35d7062e0e6082431fc2d241"
+        }
+      ],
+      "rejected_segmentation_predictions": [],
+      "raw_poses_above_model_threshold": [
+        {
+          "bbox": [
+            32.84733963012695,
+            77.29572296142578,
+            637.0665893554688,
+            640.0
+          ],
+          "confidence": 0.8993737101554871,
+          "keypoints": [
+            [
+              234.4336700439453,
+              525.3065795898438,
+              0.9706918001174927
+            ],
+            [
+              395.243408203125,
+              280.0572509765625,
+              0.9526724815368652
+            ],
+            [
+              230.43539428710938,
+              326.2721252441406,
+              0.6984602808952332
+            ]
+          ]
+        },
+        {
+          "bbox": [
+            422.501708984375,
+            471.76861572265625,
+            639.3416137695312,
+            639.9072265625
+          ],
+          "confidence": 0.593632161617279,
+          "keypoints": [
+            [
+              572.4969482421875,
+              574.8839721679688,
+              0.1369541585445404
+            ],
+            [
+              571.2130126953125,
+              574.0693969726562,
+              0.07606100291013718
+            ],
+            [
+              571.5201416015625,
+              502.0435791015625,
+              0.20219796895980835
+            ]
+          ]
+        }
+      ],
+      "desktop_predict_pair_ms": 111.7484999995213
+    }
+  ]
+}

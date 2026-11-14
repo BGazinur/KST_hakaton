@@ -1,0 +1,6 @@
+{
+  "validEvent": true,
+  "invalidEquipmentCodesRejected": 4,
+  "demoQrDecoded": "00123456",
+  "qrDecoder": "OpenCV desktop; not ML Kit device validation"
+}
