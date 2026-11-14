@@ -1,0 +1,35 @@
+Происхождение файлов и условия использования
+
+Разные части набора имеют разные источники. Имена в manifest.json однозначно связывают каждую фотографию Commons и каждый учебный вариант с исходным файлом.
+
+1. Процедурный набор. Оригинальные трёхмерные сборки созданы для этого проекта из геометрических примитивов. Растеризатор использует буфер глубины. Материалы и фоны генерируются программно. Эти изображения не имитируют конкретный паспортный насос и не получены его фотографированием. См. sources/pump_synthetic.
+
+2. CAD-набор. Модель Water Pump опубликована Grab3D с обозначением CC0 1.0. Рендеры с фотокомпозитингом, контурные метки и точки вычислены в проекте.
+https://grab3d.com/models/tools/water-pump/
+https://creativecommons.org/publicdomain/zero/1.0/
+Для фонов взяты изображения класса «no rust» из khoaliamle/Corrosion_Rust, опубликованного Dang Khoa Le на Hugging Face (в карточке указано MIT). Использованы кадрирование, размытие, масштабирование и композитинг. Первичное авторство и лицензии отдельных исходных фоновых снимков издатель не описал. Свои условия издатель указывает в карточке; при передаче коммерческому заказчику нужно проверить цепочку прав на фоновые фотографии. Большая часть просмотренной выборки показывает строительные поверхности, а не насосные рамы.
+https://huggingface.co/datasets/khoaliamle/Corrosion_Rust/tree/7dcbb4af0971c3bc4c9cbfbba036068e602846ac
+https://opensource.org/license/mit/
+Сопоставление имени кадра с отдельным исходным фоном приведено в manifest.json, credits/backgrounds.json и sources/pump_multiview_public/dataset/manifest.json. Имя локального файла и индивидуальная публичная ссылка указаны для каждого фона.
+
+3. Фотографии Wikimedia Commons. Отмеченные ниже обработанные версии распространяются на условиях соответствующей исходной CC BY-SA. Сохраните указание автора, источник, ссылку на лицензию, описание изменений и соответствующие ShareAlike условия при дальнейшей передаче/переработке. Разделение на рабочие каталоги не меняет условия отдельных изображений. Полные данные атрибуции и ссылки — в credits/commons_by_photo.json.
+
+commons_00_* — «Kreiselpumpe-Elektromotor.jpg», HopuWiki, CC BY-SA 4.0.
+https://commons.wikimedia.org/wiki/File:Kreiselpumpe-Elektromotor.jpg
+
+commons_01_* — «KSB 09 Etanorm mit Motor und Frequenzumrichter.jpg», KSB Aktiengesellschaft, Frankenthal, CC BY-SA 3.0.
+https://commons.wikimedia.org/wiki/File:KSB_09_Etanorm_mit_Motor_und_Frequenzumrichter.jpg
+
+commons_02_* — «IH-Type Series Chemical Pump.jpg», Baiqiangip, CC BY-SA 4.0.
+https://commons.wikimedia.org/wiki/File:IH-Type_Series_Chemical_Pump.jpg
+
+commons_03_* — «JTN Pump.jpg», Corporacion EG, CC BY-SA 4.0.
+https://commons.wikimedia.org/wiki/File:JTN_Pump.jpg
+
+commons_07_* — «Multistage centrifugal pump.jpg», Z22, CC BY-SA 4.0.
+https://commons.wikimedia.org/wiki/File:Multistage_centrifugal_pump.jpg
+
+https://creativecommons.org/licenses/by-sa/4.0/
+https://creativecommons.org/licenses/by-sa/3.0/
+
+Изменения фотографий Commons: учебная копия перекодирована, нанесены отдельные приближённые аннотации. Для производных учебных вариантов применялись вырезание агрегата, отражение, масштабирование, сдвиг и перенос на процедурный фон. Для двух контрольных снимков учебные варианты не создавались. Авторы исходных фотографий и моделей не заявляли об одобрении этого проекта.

@@ -1,0 +1,29 @@
+{
+  "archive_sha256": "7528008cb1371e53fc1509864c6f4f1226549bfd3466187d9352f3becb73dc28",
+  "source": "https://universe.roboflow.com/kai-bsnlf/industrial_equipment/dataset/1",
+  "license_declared": "CC BY 4.0",
+  "pump_images": 645,
+  "supplied_boxes": 899,
+  "draft_mask_files": 645,
+  "new_manual_point_images": 10,
+  "new_manual_train_images": 5,
+  "new_manual_heldout_images": 5,
+  "new_confirmed_navigation_targets": 27,
+  "draft_split_counts": {
+    "train": 514,
+    "challenge_heldout": 131
+  },
+  "training_entries": {
+    "seg": 573,
+    "pose": 96
+  },
+  "limitations": [
+    "Source includes rotated duplicates, catalog photographs, renders/diagrams and mixed equipment; 645 is not the count of independently photographed real pumps.",
+    "SAM masks are weak labels, not independent ground truth; only sampled visual review completed.",
+    "Only selected source families excluded from new training; cross-source scene duplicates not exhaustively ruled out.",
+    "5 new manually annotated training images include multiple views of same family; 5 heldout views are a small pilot.",
+    "Old validation/test material is historical and repeatedly exposed.",
+    "Unknown keypoints: training v=1, center dummy coordinates, masked coordinate and confidence loss; pose mosaic disabled. Standard external YOLO trainers must not be used without this loss handling.",
+    "No Android, temporal video or metric 3D validation."
+  ]
+}

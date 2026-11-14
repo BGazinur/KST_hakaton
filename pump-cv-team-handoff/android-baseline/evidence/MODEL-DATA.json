@@ -1,0 +1,69 @@
+{
+  "training": "600 procedural training views incl. backgrounds; 312 Grab3D views; 114 examples from 3 Commons images including derived copies. External evaluation images kept separate.",
+  "grab3d": {
+    "model": "water-pump.glb",
+    "title": "Water Pump",
+    "author": "Grab3D",
+    "license": "CC0-1.0",
+    "source": "https://grab3d.com/models/tools/water-pump/",
+    "sha256": "0cfe418672ff5456e84d075fd10939d88980504e6f73a6b2db2b21f5a455537f",
+    "backgrounds": "50 publisher-labeled no-rust photos, mostly concrete; khoaliamle/Corrosion_Rust (Hugging Face)",
+    "views": {
+      "train": 312,
+      "val": 48,
+      "test": 48
+    },
+    "keypoints": [
+      "frame",
+      "casing",
+      "terminal_box"
+    ],
+    "annotation": "Each keypoint indicates an interior point on the visible portion of a component. Suppressed when its largest connected component falls below 0.18% bbox area or visible thickness is < 4.3 px.",
+    "mask": "External silhouette polygon. Interior holes are not represented in YOLO polygons.",
+    "limits": "Synthetic single assembly with photographic backgrounds, held-out background images and azimuth sectors; not a real-camera test. No defect labels."
+  },
+  "commons": [
+    {
+      "id": 0,
+      "name": "Kreiselpumpe-Elektromotor.jpg",
+      "source": "https://commons.wikimedia.org/wiki/File:Kreiselpumpe-Elektromotor.jpg",
+      "author": "HopuWiki",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0"
+    },
+    {
+      "id": 1,
+      "name": "KSB 09 Etanorm mit Motor und Frequenzumrichter.jpg",
+      "source": "https://commons.wikimedia.org/wiki/File:KSB_09_Etanorm_mit_Motor_und_Frequenzumrichter.jpg",
+      "author": "KSB Aktiengesellschaft, Frankenthal",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0"
+    },
+    {
+      "id": 2,
+      "name": "IH-Type Series Chemical Pump.jpg",
+      "source": "https://commons.wikimedia.org/wiki/File:IH-Type_Series_Chemical_Pump.jpg",
+      "author": "Baiqiangip",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0"
+    },
+    {
+      "id": 3,
+      "name": "JTN Pump.jpg",
+      "source": "https://commons.wikimedia.org/wiki/File:JTN_Pump.jpg",
+      "author": "Corporacion EG",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0"
+    },
+    {
+      "id": 7,
+      "name": "Multistage centrifugal pump.jpg",
+      "source": "https://commons.wikimedia.org/wiki/File:Multistage_centrifugal_pump.jpg",
+      "author": "Z22",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0"
+    }
+  ],
+  "framework": "Ultralytics YOLO11, https://docs.ultralytics.com/models/yolo11/",
+  "corrosion": "dgs, Rust 2.0 v3, https://universe.roboflow.com/dgs-bdj8h/rust-2.0-susmh-3apgo/dataset/3"
+}

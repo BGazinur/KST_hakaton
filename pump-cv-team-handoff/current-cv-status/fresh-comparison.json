@@ -1,0 +1,1116 @@
+{
+  "v1": {
+    "images": [
+      {
+        "id": "rf_0506",
+        "detections": 1,
+        "bbox_match_iou50": 1,
+        "points": {
+          "confirmedVisibleKeypoints": 3,
+          "predictedForConfirmedVisible": 3,
+          "missingConfirmedVisible": 0,
+          "pck10Correct": 2,
+          "withinAnnotatedRegionCount": 0,
+          "emittedZones": 3,
+          "predictedZonesWithoutConfirmedGT": 0,
+          "predictedZonesOnMatchedNullReference": 0,
+          "predictedZonesOnUnmatchedEquipment": 0,
+          "zonesSuppressedByMultiEquipmentPolicy": false,
+          "details": [
+            {
+              "gt_instance": 0,
+              "zone": "frame",
+              "gt": {
+                "point": [
+                  0.53,
+                  0.82
+                ],
+                "bbox": [
+                  0.46,
+                  0.75,
+                  0.6000000000000001,
+                  0.8899999999999999
+                ]
+              },
+              "predicted": {
+                "point": [
+                  0.3811676502227783,
+                  0.7281232357025147
+                ],
+                "confidence": 0.9393937587738037
+              },
+              "error_bbox_diagonal": 0.16542201416700777,
+              "pck10": false,
+              "withinAnnotatedRegion": false
+            },
+            {
+              "gt_instance": 0,
+              "zone": "casing",
+              "gt": {
+                "point": [
+                  0.38,
+                  0.58
+                ],
+                "bbox": [
+                  0.31,
+                  0.51,
+                  0.45,
+                  0.6499999999999999
+                ]
+              },
+              "predicted": {
+                "point": [
+                  0.45474443435668943,
+                  0.5364777088165283
+                ],
+                "confidence": 0.9690920114517212
+              },
+              "error_bbox_diagonal": 0.08180201203291394,
+              "pck10": true,
+              "withinAnnotatedRegion": false
+            },
+            {
+              "gt_instance": 0,
+              "zone": "terminal_box",
+              "gt": {
+                "point": [
+                  0.79,
+                  0.28
+                ],
+                "bbox": [
+                  0.72,
+                  0.21000000000000002,
+                  0.8600000000000001,
+                  0.35000000000000003
+                ]
+              },
+              "predicted": {
+                "point": [
+                  0.7095475673675538,
+                  0.24283099174499512
+                ],
+                "confidence": 0.8485310077667236
+              },
+              "error_bbox_diagonal": 0.08381765178021824,
+              "pck10": true,
+              "withinAnnotatedRegion": false
+            }
+          ]
+        },
+        "predicted_boxes": [
+          [
+            0.0,
+            0.0,
+            636.60498046875,
+            575.8652954101562
+          ]
+        ],
+        "zones": [
+          {
+            "frame": {
+              "point": [
+                0.3811676502227783,
+                0.7281232357025147
+              ],
+              "confidence": 0.9393937587738037
+            },
+            "casing": {
+              "point": [
+                0.45474443435668943,
+                0.5364777088165283
+              ],
+              "confidence": 0.9690920114517212
+            },
+            "terminal_box": {
+              "point": [
+                0.7095475673675538,
+                0.24283099174499512
+              ],
+              "confidence": 0.8485310077667236
+            }
+          }
+        ]
+      },
+      {
+        "id": "rf_0509",
+        "detections": 1,
+        "bbox_match_iou50": 1,
+        "points": {
+          "confirmedVisibleKeypoints": 3,
+          "predictedForConfirmedVisible": 3,
+          "missingConfirmedVisible": 0,
+          "pck10Correct": 3,
+          "withinAnnotatedRegionCount": 1,
+          "emittedZones": 3,
+          "predictedZonesWithoutConfirmedGT": 0,
+          "predictedZonesOnMatchedNullReference": 0,
+          "predictedZonesOnUnmatchedEquipment": 0,
+          "zonesSuppressedByMultiEquipmentPolicy": false,
+          "details": [
+            {
+              "gt_instance": 0,
+              "zone": "frame",
+              "gt": {
+                "point": [
+                  0.5,
+                  0.85
+                ],
+                "bbox": [
+                  0.43,
+                  0.78,
+                  0.5700000000000001,
+                  0.9199999999999999
+                ]
+              },
+              "predicted": {
+                "point": [
+                  0.4897467136383057,
+                  0.8365108489990234
+                ],
+                "confidence": 0.9416912198066711
+              },
+              "error_bbox_diagonal": 0.014586849807673656,
+              "pck10": true,
+              "withinAnnotatedRegion": true
+            },
+            {
+              "gt_instance": 0,
+              "zone": "casing",
+              "gt": {
+                "point": [
+                  0.17,
+                  0.45
+                ],
+                "bbox": [
+                  0.1,
+                  0.38,
+                  0.24000000000000002,
+                  0.52
+                ]
+              },
+              "predicted": {
+                "point": [
+                  0.1886255621910095,
+                  0.5603805541992187
+                ],
+                "confidence": 0.9312641024589539
+              },
+              "error_bbox_diagonal": 0.09637041156698814,
+              "pck10": true,
+              "withinAnnotatedRegion": false
+            },
+            {
+              "gt_instance": 0,
+              "zone": "terminal_box",
+              "gt": {
+                "point": [
+                  0.61,
+                  0.27
+                ],
+                "bbox": [
+                  0.54,
+                  0.2,
+                  0.6799999999999999,
+                  0.34
+                ]
+              },
+              "predicted": {
+                "point": [
+                  0.6129484176635742,
+                  0.3772563457489014
+                ],
+                "confidence": 0.8626163005828857
+              },
+              "error_bbox_diagonal": 0.09237229127205808,
+              "pck10": true,
+              "withinAnnotatedRegion": false
+            }
+          ]
+        },
+        "predicted_boxes": [
+          [
+            2.8875732421875,
+            0.043194111436605453,
+            633.552734375,
+            621.739501953125
+          ]
+        ],
+        "zones": [
+          {
+            "frame": {
+              "point": [
+                0.4897467136383057,
+                0.8365108489990234
+              ],
+              "confidence": 0.9416912198066711
+            },
+            "casing": {
+              "point": [
+                0.1886255621910095,
+                0.5603805541992187
+              ],
+              "confidence": 0.9312641024589539
+            },
+            "terminal_box": {
+              "point": [
+                0.6129484176635742,
+                0.3772563457489014
+              ],
+              "confidence": 0.8626163005828857
+            }
+          }
+        ]
+      },
+      {
+        "id": "rf_0629",
+        "detections": 1,
+        "bbox_match_iou50": 1,
+        "points": {
+          "confirmedVisibleKeypoints": 3,
+          "predictedForConfirmedVisible": 2,
+          "missingConfirmedVisible": 1,
+          "pck10Correct": 1,
+          "withinAnnotatedRegionCount": 1,
+          "emittedZones": 2,
+          "predictedZonesWithoutConfirmedGT": 0,
+          "predictedZonesOnMatchedNullReference": 0,
+          "predictedZonesOnUnmatchedEquipment": 0,
+          "zonesSuppressedByMultiEquipmentPolicy": false,
+          "details": [
+            {
+              "gt_instance": 0,
+              "zone": "frame",
+              "gt": {
+                "point": [
+                  0.6,
+                  0.78
+                ],
+                "bbox": [
+                  0.53,
+                  0.71,
+                  0.6699999999999999,
+                  0.8500000000000001
+                ]
+              },
+              "predicted": {
+                "point": [
+                  0.5009188652038574,
+                  0.7394178867340088
+                ],
+                "confidence": 0.9097898602485657
+              },
+              "error_bbox_diagonal": 0.12152955662430927,
+              "pck10": false,
+              "withinAnnotatedRegion": false
+            },
+            {
+              "gt_instance": 0,
+              "zone": "casing",
+              "gt": {
+                "point": [
+                  0.26,
+                  0.59
+                ],
+                "bbox": [
+                  0.19,
+                  0.52,
+                  0.33,
+                  0.6599999999999999
+                ]
+              },
+              "predicted": {
+                "point": [
+                  0.19909114837646485,
+                  0.5290242195129394
+                ],
+                "confidence": 0.9275422096252441
+              },
+              "error_bbox_diagonal": 0.09782463528625476,
+              "pck10": true,
+              "withinAnnotatedRegion": true
+            },
+            {
+              "gt_instance": 0,
+              "zone": "terminal_box",
+              "gt": {
+                "point": [
+                  0.65,
+                  0.6
+                ],
+                "bbox": [
+                  0.5800000000000001,
+                  0.53,
+                  0.72,
+                  0.6699999999999999
+                ]
+              },
+              "predicted": null,
+              "error_bbox_diagonal": null,
+              "pck10": false,
+              "withinAnnotatedRegion": false
+            }
+          ]
+        },
+        "predicted_boxes": [
+          [
+            96.32986450195312,
+            260.8554992675781,
+            540.0770263671875,
+            529.1239624023438
+          ]
+        ],
+        "zones": [
+          {
+            "frame": {
+              "point": [
+                0.5009188652038574,
+                0.7394178867340088
+              ],
+              "confidence": 0.9097898602485657
+            },
+            "casing": {
+              "point": [
+                0.19909114837646485,
+                0.5290242195129394
+              ],
+              "confidence": 0.9275422096252441
+            }
+          }
+        ]
+      },
+      {
+        "id": "rf_0640",
+        "detections": 1,
+        "bbox_match_iou50": 1,
+        "points": {
+          "confirmedVisibleKeypoints": 2,
+          "predictedForConfirmedVisible": 2,
+          "missingConfirmedVisible": 0,
+          "pck10Correct": 0,
+          "withinAnnotatedRegionCount": 0,
+          "emittedZones": 3,
+          "predictedZonesWithoutConfirmedGT": 1,
+          "predictedZonesOnMatchedNullReference": 1,
+          "predictedZonesOnUnmatchedEquipment": 0,
+          "zonesSuppressedByMultiEquipmentPolicy": false,
+          "details": [
+            {
+              "gt_instance": 0,
+              "zone": "frame",
+              "gt": {
+                "point": [
+                  0.5,
+                  0.83
+                ],
+                "bbox": [
+                  0.43,
+                  0.76,
+                  0.5700000000000001,
+                  0.8999999999999999
+                ]
+              },
+              "predicted": {
+                "point": [
+                  0.34448990821838377,
+                  0.9102693557739258
+                ],
+                "confidence": 0.9205638766288757
+              },
+              "error_bbox_diagonal": 0.17382418597056273,
+              "pck10": false,
+              "withinAnnotatedRegion": false
+            },
+            {
+              "gt_instance": 0,
+              "zone": "casing",
+              "gt": {
+                "point": [
+                  0.25,
+                  0.47
+                ],
+                "bbox": [
+                  0.18,
+                  0.39999999999999997,
+                  0.32,
+                  0.54
+                ]
+              },
+              "predicted": {
+                "point": [
+                  0.288755989074707,
+                  0.5801765441894531
+                ],
+                "confidence": 0.9006230235099792
+              },
+              "error_bbox_diagonal": 0.11600656890416958,
+              "pck10": false,
+              "withinAnnotatedRegion": false
+            }
+          ]
+        },
+        "predicted_boxes": [
+          [
+            0.0,
+            70.84745025634766,
+            640.0,
+            638.5438842773438
+          ]
+        ],
+        "zones": [
+          {
+            "frame": {
+              "point": [
+                0.34448990821838377,
+                0.9102693557739258
+              ],
+              "confidence": 0.9205638766288757
+            },
+            "casing": {
+              "point": [
+                0.288755989074707,
+                0.5801765441894531
+              ],
+              "confidence": 0.9006230235099792
+            },
+            "terminal_box": {
+              "point": [
+                0.5461981773376465,
+                0.4459851264953613
+              ],
+              "confidence": 0.8016154170036316
+            }
+          }
+        ]
+      },
+      {
+        "id": "rf_0641",
+        "detections": 2,
+        "bbox_match_iou50": 1,
+        "points": {
+          "confirmedVisibleKeypoints": 1,
+          "predictedForConfirmedVisible": 0,
+          "missingConfirmedVisible": 1,
+          "pck10Correct": 0,
+          "withinAnnotatedRegionCount": 0,
+          "emittedZones": 0,
+          "predictedZonesWithoutConfirmedGT": 0,
+          "predictedZonesOnMatchedNullReference": 0,
+          "predictedZonesOnUnmatchedEquipment": 0,
+          "zonesSuppressedByMultiEquipmentPolicy": true,
+          "details": [
+            {
+              "gt_instance": 0,
+              "zone": "casing",
+              "gt": {
+                "point": [
+                  0.3,
+                  0.56
+                ],
+                "bbox": [
+                  0.22999999999999998,
+                  0.49000000000000005,
+                  0.37,
+                  0.6300000000000001
+                ]
+              },
+              "predicted": null,
+              "error_bbox_diagonal": null,
+              "pck10": false,
+              "withinAnnotatedRegion": false
+            }
+          ]
+        },
+        "predicted_boxes": [
+          [
+            0.0,
+            154.19180297851562,
+            640.0,
+            636.9508056640625
+          ],
+          [
+            0.0,
+            0.0,
+            640.0,
+            475.56793212890625
+          ]
+        ],
+        "zones": [
+          {
+            "frame": {
+              "point": [
+                0.3925560235977173,
+                0.8315424919128418
+              ],
+              "confidence": 0.9132968783378601
+            },
+            "casing": {
+              "point": [
+                0.3169280767440796,
+                0.43828907012939455
+              ],
+              "confidence": 0.8219878673553467
+            },
+            "terminal_box": {
+              "point": [
+                0.5229055881500244,
+                0.35965843200683595
+              ],
+              "confidence": 0.7568323612213135
+            }
+          },
+          {
+            "casing": {
+              "point": [
+                0.3169280767440796,
+                0.43828907012939455
+              ],
+              "confidence": 0.8219878673553467
+            },
+            "terminal_box": {
+              "point": [
+                0.5229055881500244,
+                0.35965843200683595
+              ],
+              "confidence": 0.7568323612213135
+            }
+          }
+        ]
+      }
+    ],
+    "bbox_recall_count": 5,
+    "nGT": 5,
+    "points": {
+      "confirmedVisibleKeypoints": 12,
+      "predictedForConfirmedVisible": 10,
+      "missingConfirmedVisible": 2,
+      "pck10Correct": 6,
+      "withinAnnotatedRegionCount": 2,
+      "emittedZones": 11,
+      "predictedZonesWithoutConfirmedGT": 1,
+      "predictedZonesOnMatchedNullReference": 1,
+      "predictedZonesOnUnmatchedEquipment": 0,
+      "PCK@0.1_bbox_diagonal": 0.5,
+      "withinAnnotatedRegionRate_allConfirmedVisible": 0.16666666666666666,
+      "meanError_predictedConfirmedVisibleOnly": 0.10435561774121563,
+      "framesWithZoneSuppression": 1,
+      "unconfirmed_is_not_false_positive_rate": true
+    },
+    "mask_accuracy": "not_measured_no_independent_gold_masks",
+    "limitations": "5 hand-annotated views, approximate navigation targets, not a field benchmark; cross-source scene duplicates not exhaustively ruled out"
+  },
+  "v3": {
+    "images": [
+      {
+        "id": "rf_0506",
+        "detections": 1,
+        "bbox_match_iou50": 1,
+        "points": {
+          "confirmedVisibleKeypoints": 3,
+          "predictedForConfirmedVisible": 2,
+          "missingConfirmedVisible": 1,
+          "pck10Correct": 0,
+          "withinAnnotatedRegionCount": 0,
+          "emittedZones": 2,
+          "predictedZonesWithoutConfirmedGT": 0,
+          "predictedZonesOnMatchedNullReference": 0,
+          "predictedZonesOnUnmatchedEquipment": 0,
+          "zonesSuppressedByMultiEquipmentPolicy": false,
+          "details": [
+            {
+              "gt_instance": 0,
+              "zone": "frame",
+              "gt": {
+                "point": [
+                  0.53,
+                  0.82
+                ],
+                "bbox": [
+                  0.46,
+                  0.75,
+                  0.6000000000000001,
+                  0.8899999999999999
+                ]
+              },
+              "predicted": {
+                "point": [
+                  0.5681777954101562,
+                  0.7185861587524414
+                ],
+                "confidence": 0.9863253235816956
+              },
+              "error_bbox_diagonal": 0.10248569866437525,
+              "pck10": false,
+              "withinAnnotatedRegion": false
+            },
+            {
+              "gt_instance": 0,
+              "zone": "casing",
+              "gt": {
+                "point": [
+                  0.38,
+                  0.58
+                ],
+                "bbox": [
+                  0.31,
+                  0.51,
+                  0.45,
+                  0.6499999999999999
+                ]
+              },
+              "predicted": {
+                "point": [
+                  0.29406921863555907,
+                  0.3812111377716064
+                ],
+                "confidence": 0.9886337518692017
+              },
+              "error_bbox_diagonal": 0.20482267649248953,
+              "pck10": false,
+              "withinAnnotatedRegion": false
+            },
+            {
+              "gt_instance": 0,
+              "zone": "terminal_box",
+              "gt": {
+                "point": [
+                  0.79,
+                  0.28
+                ],
+                "bbox": [
+                  0.72,
+                  0.21000000000000002,
+                  0.8600000000000001,
+                  0.35000000000000003
+                ]
+              },
+              "predicted": null,
+              "error_bbox_diagonal": null,
+              "pck10": false,
+              "withinAnnotatedRegion": false
+            }
+          ]
+        },
+        "predicted_boxes": [
+          [
+            110.91778564453125,
+            48.65647888183594,
+            632.44970703125,
+            632.4615478515625
+          ]
+        ],
+        "zones": [
+          {
+            "frame": {
+              "point": [
+                0.5681777954101562,
+                0.7185861587524414
+              ],
+              "confidence": 0.9863253235816956
+            },
+            "casing": {
+              "point": [
+                0.29406921863555907,
+                0.3812111377716064
+              ],
+              "confidence": 0.9886337518692017
+            }
+          }
+        ]
+      },
+      {
+        "id": "rf_0509",
+        "detections": 1,
+        "bbox_match_iou50": 1,
+        "points": {
+          "confirmedVisibleKeypoints": 3,
+          "predictedForConfirmedVisible": 3,
+          "missingConfirmedVisible": 0,
+          "pck10Correct": 3,
+          "withinAnnotatedRegionCount": 2,
+          "emittedZones": 3,
+          "predictedZonesWithoutConfirmedGT": 0,
+          "predictedZonesOnMatchedNullReference": 0,
+          "predictedZonesOnUnmatchedEquipment": 0,
+          "zonesSuppressedByMultiEquipmentPolicy": false,
+          "details": [
+            {
+              "gt_instance": 0,
+              "zone": "frame",
+              "gt": {
+                "point": [
+                  0.5,
+                  0.85
+                ],
+                "bbox": [
+                  0.43,
+                  0.78,
+                  0.5700000000000001,
+                  0.9199999999999999
+                ]
+              },
+              "predicted": {
+                "point": [
+                  0.4333483219146729,
+                  0.8458357810974121
+                ],
+                "confidence": 0.9966676831245422
+              },
+              "error_bbox_diagonal": 0.05749257290639534,
+              "pck10": true,
+              "withinAnnotatedRegion": true
+            },
+            {
+              "gt_instance": 0,
+              "zone": "casing",
+              "gt": {
+                "point": [
+                  0.17,
+                  0.45
+                ],
+                "bbox": [
+                  0.1,
+                  0.38,
+                  0.24000000000000002,
+                  0.52
+                ]
+              },
+              "predicted": {
+                "point": [
+                  0.07461955547332763,
+                  0.4115756988525391
+                ],
+                "confidence": 0.9973556995391846
+              },
+              "error_bbox_diagonal": 0.08852611155691269,
+              "pck10": true,
+              "withinAnnotatedRegion": false
+            },
+            {
+              "gt_instance": 0,
+              "zone": "terminal_box",
+              "gt": {
+                "point": [
+                  0.61,
+                  0.27
+                ],
+                "bbox": [
+                  0.54,
+                  0.2,
+                  0.6799999999999999,
+                  0.34
+                ]
+              },
+              "predicted": {
+                "point": [
+                  0.6109255313873291,
+                  0.3044801473617554
+                ],
+                "confidence": 0.9907141923904419
+              },
+              "error_bbox_diagonal": 0.029694786387319295,
+              "pck10": true,
+              "withinAnnotatedRegion": true
+            }
+          ]
+        },
+        "predicted_boxes": [
+          [
+            7.608549118041992,
+            119.39500427246094,
+            637.5990600585938,
+            629.9107666015625
+          ]
+        ],
+        "zones": [
+          {
+            "frame": {
+              "point": [
+                0.4333483219146729,
+                0.8458357810974121
+              ],
+              "confidence": 0.9966676831245422
+            },
+            "casing": {
+              "point": [
+                0.07461955547332763,
+                0.4115756988525391
+              ],
+              "confidence": 0.9973556995391846
+            },
+            "terminal_box": {
+              "point": [
+                0.6109255313873291,
+                0.3044801473617554
+              ],
+              "confidence": 0.9907141923904419
+            }
+          }
+        ]
+      },
+      {
+        "id": "rf_0629",
+        "detections": 1,
+        "bbox_match_iou50": 1,
+        "points": {
+          "confirmedVisibleKeypoints": 3,
+          "predictedForConfirmedVisible": 0,
+          "missingConfirmedVisible": 3,
+          "pck10Correct": 0,
+          "withinAnnotatedRegionCount": 0,
+          "emittedZones": 0,
+          "predictedZonesWithoutConfirmedGT": 0,
+          "predictedZonesOnMatchedNullReference": 0,
+          "predictedZonesOnUnmatchedEquipment": 0,
+          "zonesSuppressedByMultiEquipmentPolicy": false,
+          "details": [
+            {
+              "gt_instance": 0,
+              "zone": "frame",
+              "gt": {
+                "point": [
+                  0.6,
+                  0.78
+                ],
+                "bbox": [
+                  0.53,
+                  0.71,
+                  0.6699999999999999,
+                  0.8500000000000001
+                ]
+              },
+              "predicted": null,
+              "error_bbox_diagonal": null,
+              "pck10": false,
+              "withinAnnotatedRegion": false
+            },
+            {
+              "gt_instance": 0,
+              "zone": "casing",
+              "gt": {
+                "point": [
+                  0.26,
+                  0.59
+                ],
+                "bbox": [
+                  0.19,
+                  0.52,
+                  0.33,
+                  0.6599999999999999
+                ]
+              },
+              "predicted": null,
+              "error_bbox_diagonal": null,
+              "pck10": false,
+              "withinAnnotatedRegion": false
+            },
+            {
+              "gt_instance": 0,
+              "zone": "terminal_box",
+              "gt": {
+                "point": [
+                  0.65,
+                  0.6
+                ],
+                "bbox": [
+                  0.5800000000000001,
+                  0.53,
+                  0.72,
+                  0.6699999999999999
+                ]
+              },
+              "predicted": null,
+              "error_bbox_diagonal": null,
+              "pck10": false,
+              "withinAnnotatedRegion": false
+            }
+          ]
+        },
+        "predicted_boxes": [
+          [
+            96.26812744140625,
+            267.55792236328125,
+            534.9337158203125,
+            534.747314453125
+          ]
+        ],
+        "zones": [
+          {}
+        ]
+      },
+      {
+        "id": "rf_0640",
+        "detections": 1,
+        "bbox_match_iou50": 1,
+        "points": {
+          "confirmedVisibleKeypoints": 2,
+          "predictedForConfirmedVisible": 2,
+          "missingConfirmedVisible": 0,
+          "pck10Correct": 1,
+          "withinAnnotatedRegionCount": 0,
+          "emittedZones": 3,
+          "predictedZonesWithoutConfirmedGT": 1,
+          "predictedZonesOnMatchedNullReference": 1,
+          "predictedZonesOnUnmatchedEquipment": 0,
+          "zonesSuppressedByMultiEquipmentPolicy": false,
+          "details": [
+            {
+              "gt_instance": 0,
+              "zone": "frame",
+              "gt": {
+                "point": [
+                  0.5,
+                  0.83
+                ],
+                "bbox": [
+                  0.43,
+                  0.76,
+                  0.5700000000000001,
+                  0.8999999999999999
+                ]
+              },
+              "predicted": {
+                "point": [
+                  0.4779496192932129,
+                  0.9293730735778809
+                ],
+                "confidence": 0.9932363629341125
+              },
+              "error_bbox_diagonal": 0.10110361938977082,
+              "pck10": false,
+              "withinAnnotatedRegion": false
+            },
+            {
+              "gt_instance": 0,
+              "zone": "casing",
+              "gt": {
+                "point": [
+                  0.25,
+                  0.47
+                ],
+                "bbox": [
+                  0.18,
+                  0.39999999999999997,
+                  0.32,
+                  0.54
+                ]
+              },
+              "predicted": {
+                "point": [
+                  0.2727694511413574,
+                  0.5649998664855957
+                ],
+                "confidence": 0.9958286881446838
+              },
+              "error_bbox_diagonal": 0.09703159811863839,
+              "pck10": true,
+              "withinAnnotatedRegion": false
+            }
+          ]
+        },
+        "predicted_boxes": [
+          [
+            102.79973602294922,
+            165.6990509033203,
+            638.6845703125,
+            632.79052734375
+          ]
+        ],
+        "zones": [
+          {
+            "frame": {
+              "point": [
+                0.4779496192932129,
+                0.9293730735778809
+              ],
+              "confidence": 0.9932363629341125
+            },
+            "casing": {
+              "point": [
+                0.2727694511413574,
+                0.5649998664855957
+              ],
+              "confidence": 0.9958286881446838
+            },
+            "terminal_box": {
+              "point": [
+                0.6551942348480224,
+                0.4426736354827881
+              ],
+              "confidence": 0.9838786125183105
+            }
+          }
+        ]
+      },
+      {
+        "id": "rf_0641",
+        "detections": 1,
+        "bbox_match_iou50": 0,
+        "points": {
+          "confirmedVisibleKeypoints": 1,
+          "predictedForConfirmedVisible": 0,
+          "missingConfirmedVisible": 1,
+          "pck10Correct": 0,
+          "withinAnnotatedRegionCount": 0,
+          "emittedZones": 0,
+          "predictedZonesWithoutConfirmedGT": 0,
+          "predictedZonesOnMatchedNullReference": 0,
+          "predictedZonesOnUnmatchedEquipment": 0,
+          "zonesSuppressedByMultiEquipmentPolicy": false,
+          "details": [
+            {
+              "gt_instance": 0,
+              "zone": "casing",
+              "gt": {
+                "point": [
+                  0.3,
+                  0.56
+                ],
+                "bbox": [
+                  0.22999999999999998,
+                  0.49000000000000005,
+                  0.37,
+                  0.6300000000000001
+                ]
+              },
+              "predicted": null,
+              "error_bbox_diagonal": null,
+              "pck10": false,
+              "withinAnnotatedRegion": false
+            }
+          ]
+        },
+        "predicted_boxes": [
+          [
+            271.6750183105469,
+            241.7324981689453,
+            640.0,
+            639.349853515625
+          ]
+        ],
+        "zones": [
+          {}
+        ]
+      }
+    ],
+    "bbox_recall_count": 4,
+    "nGT": 5,
+    "points": {
+      "confirmedVisibleKeypoints": 12,
+      "predictedForConfirmedVisible": 7,
+      "missingConfirmedVisible": 5,
+      "pck10Correct": 4,
+      "withinAnnotatedRegionCount": 2,
+      "emittedZones": 8,
+      "predictedZonesWithoutConfirmedGT": 1,
+      "predictedZonesOnMatchedNullReference": 1,
+      "predictedZonesOnUnmatchedEquipment": 0,
+      "PCK@0.1_bbox_diagonal": 0.3333333333333333,
+      "withinAnnotatedRegionRate_allConfirmedVisible": 0.16666666666666666,
+      "meanError_predictedConfirmedVisibleOnly": 0.09730815193084305,
+      "framesWithZoneSuppression": 0,
+      "unconfirmed_is_not_false_positive_rate": true
+    },
+    "mask_accuracy": "not_measured_no_independent_gold_masks",
+    "limitations": "5 hand-annotated views, approximate navigation targets, not a field benchmark; cross-source scene duplicates not exhaustively ruled out"
+  }
+}

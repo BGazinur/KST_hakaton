@@ -1,0 +1,52 @@
+{
+  "tests": [
+    {
+      "name": "com.arengineering.inspection.cv.CoreCvTest",
+      "tests": "12",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "time": "0.108"
+    },
+    {
+      "name": "com.arengineering.inspection.cv.CvResultJsonTest",
+      "tests": "4",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "time": "0.01"
+    },
+    {
+      "name": "com.arengineering.inspection.cv.ModelParityTest",
+      "tests": "3",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "time": "3.698"
+    },
+    {
+      "name": "com.arengineering.inspection.cv.ReferenceMotionTest",
+      "tests": "4",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "time": "0.01"
+    },
+    {
+      "name": "com.arengineering.inspection.cv.Yuv420CopierTest",
+      "tests": "4",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "time": "0.005"
+    }
+  ],
+  "apk": {
+    "modelsPresent": 3,
+    "modelsUncompressed": true,
+    "testFixturesAbsent": true,
+    "apkSha256": "73da8d2936ba3c42ffcb86926732bcc42efe3fd9e8e3565f08acf6520d370a50",
+    "note": "Compile/link verification only; CV callbacks are not wired into the app UI and this APK is not the handoff product."
+  },
+  "deviceTested": false
+}

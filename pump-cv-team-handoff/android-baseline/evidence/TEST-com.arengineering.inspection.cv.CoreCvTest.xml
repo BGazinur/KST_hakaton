@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.arengineering.inspection.cv.CoreCvTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-11-14T05:26:43.323Z" hostname="DESKTOP-T8H5NC9" time="0.108">
+  <properties/>
+  <testcase name="fourRotationsMapKnownRawLandmarkAndAsymmetricPadding" classname="com.arengineering.inspection.cv.CoreCvTest" time="0.017"/>
+  <testcase name="nominalFloat32ConfidenceBoundaryIsInclusive" classname="com.arengineering.inspection.cv.CoreCvTest" time="0.024"/>
+  <testcase name="poseNeedsVisibleConfidenceAndRawFovAndBothModelsMustAgree" classname="com.arengineering.inspection.cv.CoreCvTest" time="0.001"/>
+  <testcase name="maskRoiAndRawRotationMovePixelsWithoutJoiningRegions" classname="com.arengineering.inspection.cv.CoreCvTest" time="0.006"/>
+  <testcase name="maskMatrixCombinationPreservesRingHoleAndDisconnectedComponent" classname="com.arengineering.inspection.cv.CoreCvTest" time="0.005"/>
+  <testcase name="rowMajorZeroStartRleDecodesKnownRunsAndCopiesMutableArrays" classname="com.arengineering.inspection.cv.CoreCvTest" time="0.006"/>
+  <testcase name="exactZeroLogitsStayBackgroundAndMalformedShapesFail" classname="com.arengineering.inspection.cv.CoreCvTest" time="0.004"/>
+  <testcase name="rejectionDoesNotPromoteSourceTimestampOrConsumeNewerResultAndLongsAreStrings" classname="com.arengineering.inspection.cv.CoreCvTest" time="0.011"/>
+  <testcase name="letterboxUsesRoundedAxisScalesAndDoesNotClampPaddingIntoImage" classname="com.arengineering.inspection.cv.CoreCvTest" time="0.001"/>
+  <testcase name="capturedAffineSelectsClockwiseQuadrantAndRayUsesSourcePose" classname="com.arengineering.inspection.cv.CoreCvTest" time="0.0"/>
+  <testcase name="nmsIsOneClassScoreOrderedAndCappedAndIgnoresNan" classname="com.arengineering.inspection.cv.CoreCvTest" time="0.026"/>
+  <testcase name="gateRejectsIndependentSessionEpochTrackingAgeAndOutOfOrderResults" classname="com.arengineering.inspection.cv.CoreCvTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

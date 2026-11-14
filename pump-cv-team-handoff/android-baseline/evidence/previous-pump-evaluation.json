@@ -1,0 +1,328 @@
+{
+  "seg": {
+    "task": "seg",
+    "roots": [
+      "work/pump_synthetic/seg",
+      "work/pump_multiview_public/dataset/seg",
+      "work/pump_real/seg"
+    ],
+    "counts": {
+      "train": [
+        600,
+        312,
+        114
+      ],
+      "val": [
+        90,
+        48,
+        0
+      ],
+      "test": [
+        90,
+        48,
+        0
+      ]
+    },
+    "scores": {
+      "metrics/precision(B)": 0.999570511052122,
+      "metrics/recall(B)": 1.0,
+      "metrics/mAP50(B)": 0.995,
+      "metrics/mAP50-95(B)": 0.9927422643410854,
+      "metrics/precision(M)": 0.999570511052122,
+      "metrics/recall(M)": 1.0,
+      "metrics/mAP50(M)": 0.995,
+      "metrics/mAP50-95(M)": 0.969748663637018,
+      "fitness": 1.9624909279781033
+    }
+  },
+  "pose": {
+    "task": "pose",
+    "roots": [
+      "work/pump_synthetic/pose",
+      "work/pump_multiview_public/dataset/pose",
+      "work/pump_real/pose"
+    ],
+    "counts": {
+      "train": [
+        600,
+        312,
+        114
+      ],
+      "val": [
+        90,
+        48,
+        0
+      ],
+      "test": [
+        90,
+        48,
+        0
+      ]
+    },
+    "scores": {
+      "metrics/precision(B)": 0.9995334272799665,
+      "metrics/recall(B)": 1.0,
+      "metrics/mAP50(B)": 0.995,
+      "metrics/mAP50-95(B)": 0.9905140715949594,
+      "metrics/precision(P)": 0.9995334272799665,
+      "metrics/recall(P)": 1.0,
+      "metrics/mAP50(P)": 0.995,
+      "metrics/mAP50-95(P)": 0.9078270089301455,
+      "fitness": 1.8983410805251049
+    }
+  },
+  "external": {
+    "thresholds": {
+      "imgsz": 416,
+      "seg": 0.35,
+      "pose": 0.3,
+      "point": 0.65,
+      "box_iou": 0.55,
+      "contour_tolerance": 0.012
+    },
+    "weights_sha256": {
+      "pump_views_v1_seg": "e0522c4a943b36f2b36235f5280aa7f0077144551a536ee14902a3c271fa30fa",
+      "pump_views_v1_pose": "770f35716de942e178b4c862410a42fa619d175ff04a3c89f8716f1a7aaba322"
+    },
+    "external": {
+      "commons_03_00.jpg": {
+        "source": "https://commons.wikimedia.org/wiki/File:JTN_Pump.jpg",
+        "seg_detections": 1,
+        "pose_detections": 1,
+        "first_frame_contour": 0,
+        "raw_union_foreground_iou": 0.5512237210379006,
+        "accepted": 1,
+        "has_selectable_landmarks": 1,
+        "emitted_landmarks": [
+          1
+        ],
+        "accepted_foreground_iou": 0.5525412030100504,
+        "visible": 2,
+        "correct_pck10": 0,
+        "missing_visible": 1,
+        "mislocalized_visible": 1,
+        "spurious_invisible": 0,
+        "normalized_point_error": {
+          "1": 0.10067803290051205
+        }
+      },
+      "commons_07_00.jpg": {
+        "source": "https://commons.wikimedia.org/wiki/File:Multistage_centrifugal_pump.jpg",
+        "seg_detections": 1,
+        "pose_detections": 1,
+        "first_frame_contour": 0,
+        "raw_union_foreground_iou": 0.4389296064764916,
+        "accepted": 1,
+        "has_selectable_landmarks": 1,
+        "emitted_landmarks": [
+          0,
+          1,
+          2
+        ],
+        "accepted_foreground_iou": 0.4389777964975038,
+        "visible": 3,
+        "correct_pck10": 0,
+        "missing_visible": 0,
+        "mislocalized_visible": 3,
+        "spurious_invisible": 0,
+        "normalized_point_error": {
+          "0": 0.10589010692051758,
+          "1": 0.12350587397174015,
+          "2": 0.46593109128889204
+        }
+      }
+    },
+    "case": {
+      "насос.jpg": {
+        "seg_detections": 1,
+        "pose_detections": 1,
+        "first_frame_contour": 0,
+        "raw_union_foreground_iou": 0.6689209431345353,
+        "accepted": 1,
+        "has_selectable_landmarks": 1,
+        "emitted_landmarks": [
+          0,
+          1,
+          2
+        ],
+        "accepted_foreground_iou": 0.6691473952350032,
+        "visible": 3,
+        "correct_pck10": 1,
+        "missing_visible": 0,
+        "mislocalized_visible": 2,
+        "spurious_invisible": 0,
+        "normalized_point_error": {
+          "0": 0.09265300440115849,
+          "1": 0.1480669460359757,
+          "2": 0.28636094180848587
+        }
+      }
+    },
+    "rejection": {
+      "photo_2026-11-13_12-46-46.jpg": {
+        "seg_detections": 1,
+        "pose_detections": 1,
+        "first_frame_contour": 0,
+        "accepted": 1,
+        "has_selectable_landmarks": 1,
+        "emitted_landmarks": [
+          0,
+          1,
+          2
+        ]
+      },
+      "6bd1015378aa4382aedc45fe4b7adda4.png": {
+        "seg_detections": 1,
+        "pose_detections": 1,
+        "first_frame_contour": 0,
+        "accepted": 1,
+        "has_selectable_landmarks": 1,
+        "emitted_landmarks": [
+          0,
+          1
+        ]
+      }
+    },
+    "external_summary": {
+      "images": 2,
+      "accepted": 2,
+      "mean_raw_foreground_iou": 0.4950766637571961,
+      "mean_accepted_foreground_iou": 0.4957594997537771,
+      "visible": 5,
+      "correct_pck10": 0,
+      "missing_visible": 1,
+      "mislocalized_visible": 4,
+      "spurious_invisible": 0
+    }
+  },
+  "synthetic_video": {
+    "weights_sha256": {
+      "seg": "e0522c4a943b36f2b36235f5280aa7f0077144551a536ee14902a3c271fa30fa",
+      "pose": "770f35716de942e178b4c862410a42fa619d175ff04a3c89f8716f1a7aaba322"
+    },
+    "source_asset_sha256": "0cfe418672ff5456e84d075fd10939d88980504e6f73a6b2db2b21f5a455537f",
+    "background": "clean_10.jpg",
+    "angle": [
+      -60,
+      60,
+      2
+    ],
+    "elevation": 17,
+    "frame_interval_seconds": 0.5,
+    "frames_in_arc": 61,
+    "contours": 60,
+    "mean_iou_all": 0.9577841952684957,
+    "contour_dropouts": 0,
+    "first_contour_frame_1based": 2,
+    "pck10_numerator": 142,
+    "pck10_denominator": 183,
+    "missing_visible_landmarks": 10,
+    "spurious_invisible_landmarks": 0,
+    "point_dropouts_while_visible": 2,
+    "first_background_contour": 0,
+    "first_background_points": 0,
+    "background_frames_with_contour": 0,
+    "background_frames_with_points": 0
+  },
+  "browser_websocket": {
+    "runtime": "CPU",
+    "wsTransport": "real localhost WebSocket",
+    "camera": "synthetic video via canvas.captureStream",
+    "qr": "DEMO-P-01",
+    "rawRgbMessages": 49,
+    "sourceViews": [
+      {
+        "source": "test_30000_00",
+        "polygonPoints": 69,
+        "visibleZones": 3,
+        "frame": true
+      },
+      {
+        "source": "test_30000_05",
+        "polygonPoints": 45,
+        "visibleZones": 3,
+        "frame": true
+      },
+      {
+        "source": "test_30000_06",
+        "polygonPoints": 41,
+        "visibleZones": 3,
+        "frame": true
+      }
+    ],
+    "lossCleared": true,
+    "unchangedOverviewRejected": true,
+    "detailMasks": 1,
+    "consecutivePositiveResponses": 4,
+    "reset": true,
+    "manualZoneTested": true,
+    "networkExternalRequests": false,
+    "pageErrors": [],
+    "appFilesChanged": [],
+    "qaFilesChangedBeforeMetrics": []
+  },
+  "weights_sha256": {
+    "models/pump-seg.pt": "e0522c4a943b36f2b36235f5280aa7f0077144551a536ee14902a3c271fa30fa",
+    "models/pump-pose.pt": "770f35716de942e178b4c862410a42fa619d175ff04a3c89f8716f1a7aaba322",
+    "models/corrosion.pt": "d26d4220bf0e4bb5815cefda8aeda74c4e58f06da3f719bb7096c61c78e9ddec"
+  },
+  "synthetic_statistics": {
+    "train": {
+      "images": 600,
+      "geometries": 60,
+      "positive": 540,
+      "negative": 60,
+      "visible_keypoints": [
+        540,
+        540,
+        435
+      ],
+      "invisible_keypoints": [
+        0,
+        0,
+        105
+      ],
+      "cases_with_separated_silhouette_regions": 122,
+      "mean_polygon_iou_vs_exact_mask": 0.96213,
+      "min_polygon_iou_vs_exact_mask": 0.78488
+    },
+    "val": {
+      "images": 90,
+      "geometries": 9,
+      "positive": 81,
+      "negative": 9,
+      "visible_keypoints": [
+        81,
+        81,
+        65
+      ],
+      "invisible_keypoints": [
+        0,
+        0,
+        16
+      ],
+      "cases_with_separated_silhouette_regions": 10,
+      "mean_polygon_iou_vs_exact_mask": 0.94399,
+      "min_polygon_iou_vs_exact_mask": 0.80004
+    },
+    "test": {
+      "images": 90,
+      "geometries": 9,
+      "positive": 81,
+      "negative": 9,
+      "visible_keypoints": [
+        81,
+        81,
+        59
+      ],
+      "invisible_keypoints": [
+        0,
+        0,
+        22
+      ],
+      "cases_with_separated_silhouette_regions": 12,
+      "mean_polygon_iou_vs_exact_mask": 0.95273,
+      "min_polygon_iou_vs_exact_mask": 0.71893
+    }
+  }
+}

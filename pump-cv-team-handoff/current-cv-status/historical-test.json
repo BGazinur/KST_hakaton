@@ -1,0 +1,1803 @@
+{
+  "schema_version": 1,
+  "split": "test",
+  "manifest": "C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\work\\pump_v2_data\\prepared\\manifest.json",
+  "manifest_sha256": "f0488c43be88e7a47de97d6dc765e1d38cca793e8537ebf5b66237f82f2cb705",
+  "models": {
+    "seg": "C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\outputs\\pump-real-v3\\models\\pump-seg.pt",
+    "seg_sha256": "7123c42fca55e2467136025a50d9b05784fa11cd01d88a7d2dda8595337f296a",
+    "pose": "C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\outputs\\pump-real-v3\\models\\pump-pose.pt",
+    "pose_sha256": "1dbab691bfbc7cbf95d16c733bf879e803b0f86f5cb943663a53039e823934e7"
+  },
+  "runtime": {
+    "ultralytics": "8.3.230",
+    "torch": "2.7.1+cu118",
+    "device": "cpu",
+    "threads": 2
+  },
+  "parameters": {
+    "imgsz": 416,
+    "seg_conf": 0.35,
+    "pose_conf": 0.3,
+    "keypoint_conf": 0.65,
+    "nms": 0.7,
+    "max_det": 10,
+    "min_area": 0.035,
+    "association_iou": 0.55,
+    "mask_tolerance": 0.012,
+    "class_id": 0
+  },
+  "method": {
+    "mask_source": "Ultralytics retina_masks=True masks.data full image >0.5; never masks.xy",
+    "matching": "Hungarian maximum total bbox IoU, drop pairs below0.3; recall computed independently at0.5; no mask-IoU oracle selection",
+    "keypoint_order": [
+      "frame",
+      "casing",
+      "terminal_box"
+    ],
+    "pck": "Euclidean raw-pixel error / GT polygon-bbox diagonal <=0.1, misses count as failures",
+    "withinAnnotatedRegion": "Point-in-annotated-bbox strict proxy; reference patch is not necessarily a full physical-part mask; misses count as failures",
+    "null_reference": "Unconfirmed/unknown/occluded, not necessarily physically absent; no zone false-positive rate is inferred",
+    "gating": "Model-candidate and Android-v1 single-equipment zone policies reported separately; full-resolution mask tolerance approximates native RLE256 geometry",
+    "orientation": "Encoded pixel orientation via PIL RGB, no EXIF transform; images passed as BGR arrays",
+    "limitations": "AI-assisted approximate annotations; still-image metric only; no temporal/AR/device performance claim"
+  },
+  "primary_point_policy": "runtime_single_equipment",
+  "primary_point_metrics": {
+    "confirmedVisibleKeypoints": 10,
+    "predictedForConfirmedVisible": 4,
+    "missingConfirmedVisible": 6,
+    "pck10Correct": 1,
+    "withinAnnotatedRegionCount": 2,
+    "emittedZones": 5,
+    "predictedZonesWithoutConfirmedGT": 1,
+    "predictedZonesOnMatchedNullReference": 1,
+    "predictedZonesOnUnmatchedEquipment": 0,
+    "PCK@0.1_bbox_diagonal": 0.1,
+    "withinAnnotatedRegionRate_allConfirmedVisible": 0.2,
+    "meanError_predictedConfirmedVisibleOnly": 0.10485628304995966,
+    "framesWithZoneSuppression": 1,
+    "unconfirmed_is_not_false_positive_rate": true
+  },
+  "overall": {
+    "nImages": 8,
+    "nGTInstances": 6,
+    "nAcceptedPredictions": 5,
+    "matchedGT_boxIoU03": 3,
+    "matchedGT_boxIoU05": 2,
+    "detectionRecall_boxIoU05": 0.3333333333333333,
+    "instanceForegroundIoU_includingMissesZero": 0.4048799572411452,
+    "instanceForegroundIoU_matchedOnly": 0.8097599144822905,
+    "multiDetectionFrames": 1,
+    "runtimeStatusCounts": {
+      "EQUIPMENT_FOUND": 3,
+      "EQUIPMENT_NOT_FOUND": 4,
+      "AMBIGUOUS": 1
+    },
+    "negativeFrames": 2,
+    "negativeFPFrames": 0,
+    "negativeFPFrameRate": 0.0,
+    "model_candidates": {
+      "confirmedVisibleKeypoints": 10,
+      "predictedForConfirmedVisible": 4,
+      "missingConfirmedVisible": 6,
+      "pck10Correct": 1,
+      "withinAnnotatedRegionCount": 2,
+      "emittedZones": 5,
+      "predictedZonesWithoutConfirmedGT": 1,
+      "predictedZonesOnMatchedNullReference": 1,
+      "predictedZonesOnUnmatchedEquipment": 0,
+      "PCK@0.1_bbox_diagonal": 0.1,
+      "withinAnnotatedRegionRate_allConfirmedVisible": 0.2,
+      "meanError_predictedConfirmedVisibleOnly": 0.10485628304995966,
+      "framesWithZoneSuppression": 0,
+      "unconfirmed_is_not_false_positive_rate": true
+    },
+    "runtime_single_equipment": {
+      "confirmedVisibleKeypoints": 10,
+      "predictedForConfirmedVisible": 4,
+      "missingConfirmedVisible": 6,
+      "pck10Correct": 1,
+      "withinAnnotatedRegionCount": 2,
+      "emittedZones": 5,
+      "predictedZonesWithoutConfirmedGT": 1,
+      "predictedZonesOnMatchedNullReference": 1,
+      "predictedZonesOnUnmatchedEquipment": 0,
+      "PCK@0.1_bbox_diagonal": 0.1,
+      "withinAnnotatedRegionRate_allConfirmedVisible": 0.2,
+      "meanError_predictedConfirmedVisibleOnly": 0.10485628304995966,
+      "framesWithZoneSuppression": 1,
+      "unconfirmed_is_not_false_positive_rate": true
+    },
+    "temporalStabilityMeasured": false,
+    "arTrackingMeasured": false
+  },
+  "per_group": {
+    "karany": {
+      "nImages": 1,
+      "nGTInstances": 1,
+      "nAcceptedPredictions": 2,
+      "matchedGT_boxIoU03": 1,
+      "matchedGT_boxIoU05": 0,
+      "detectionRecall_boxIoU05": 0.0,
+      "instanceForegroundIoU_includingMissesZero": 0.5625755582420708,
+      "instanceForegroundIoU_matchedOnly": 0.5625755582420708,
+      "multiDetectionFrames": 1,
+      "runtimeStatusCounts": {
+        "EQUIPMENT_FOUND": 0,
+        "EQUIPMENT_NOT_FOUND": 0,
+        "AMBIGUOUS": 1
+      },
+      "negativeFrames": 0,
+      "negativeFPFrames": 0,
+      "negativeFPFrameRate": null,
+      "model_candidates": {
+        "confirmedVisibleKeypoints": 1,
+        "predictedForConfirmedVisible": 0,
+        "missingConfirmedVisible": 1,
+        "pck10Correct": 0,
+        "withinAnnotatedRegionCount": 0,
+        "emittedZones": 0,
+        "predictedZonesWithoutConfirmedGT": 0,
+        "predictedZonesOnMatchedNullReference": 0,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "PCK@0.1_bbox_diagonal": 0.0,
+        "withinAnnotatedRegionRate_allConfirmedVisible": 0.0,
+        "meanError_predictedConfirmedVisibleOnly": null,
+        "framesWithZoneSuppression": 0,
+        "unconfirmed_is_not_false_positive_rate": true
+      },
+      "runtime_single_equipment": {
+        "confirmedVisibleKeypoints": 1,
+        "predictedForConfirmedVisible": 0,
+        "missingConfirmedVisible": 1,
+        "pck10Correct": 0,
+        "withinAnnotatedRegionCount": 0,
+        "emittedZones": 0,
+        "predictedZonesWithoutConfirmedGT": 0,
+        "predictedZonesOnMatchedNullReference": 0,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "PCK@0.1_bbox_diagonal": 0.0,
+        "withinAnnotatedRegionRate_allConfirmedVisible": 0.0,
+        "meanError_predictedConfirmedVisibleOnly": null,
+        "framesWithZoneSuppression": 1,
+        "unconfirmed_is_not_false_positive_rate": true
+      },
+      "temporalStabilityMeasured": false,
+      "arTrackingMeasured": false
+    },
+    "kops2_impeller_exhibit": {
+      "nImages": 1,
+      "nGTInstances": 0,
+      "nAcceptedPredictions": 0,
+      "matchedGT_boxIoU03": 0,
+      "matchedGT_boxIoU05": 0,
+      "detectionRecall_boxIoU05": null,
+      "instanceForegroundIoU_includingMissesZero": null,
+      "instanceForegroundIoU_matchedOnly": null,
+      "multiDetectionFrames": 0,
+      "runtimeStatusCounts": {
+        "EQUIPMENT_FOUND": 0,
+        "EQUIPMENT_NOT_FOUND": 1,
+        "AMBIGUOUS": 0
+      },
+      "negativeFrames": 1,
+      "negativeFPFrames": 0,
+      "negativeFPFrameRate": 0.0,
+      "model_candidates": {
+        "confirmedVisibleKeypoints": 0,
+        "predictedForConfirmedVisible": 0,
+        "missingConfirmedVisible": 0,
+        "pck10Correct": 0,
+        "withinAnnotatedRegionCount": 0,
+        "emittedZones": 0,
+        "predictedZonesWithoutConfirmedGT": 0,
+        "predictedZonesOnMatchedNullReference": 0,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "PCK@0.1_bbox_diagonal": null,
+        "withinAnnotatedRegionRate_allConfirmedVisible": null,
+        "meanError_predictedConfirmedVisibleOnly": null,
+        "framesWithZoneSuppression": 0,
+        "unconfirmed_is_not_false_positive_rate": true
+      },
+      "runtime_single_equipment": {
+        "confirmedVisibleKeypoints": 0,
+        "predictedForConfirmedVisible": 0,
+        "missingConfirmedVisible": 0,
+        "pck10Correct": 0,
+        "withinAnnotatedRegionCount": 0,
+        "emittedZones": 0,
+        "predictedZonesWithoutConfirmedGT": 0,
+        "predictedZonesOnMatchedNullReference": 0,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "PCK@0.1_bbox_diagonal": null,
+        "withinAnnotatedRegionRate_allConfirmedVisible": null,
+        "meanError_predictedConfirmedVisibleOnly": null,
+        "framesWithZoneSuppression": 0,
+        "unconfirmed_is_not_false_positive_rate": true
+      },
+      "temporalStabilityMeasured": false,
+      "arTrackingMeasured": false
+    },
+    "legacy_jtn": {
+      "nImages": 1,
+      "nGTInstances": 1,
+      "nAcceptedPredictions": 1,
+      "matchedGT_boxIoU03": 0,
+      "matchedGT_boxIoU05": 0,
+      "detectionRecall_boxIoU05": 0.0,
+      "instanceForegroundIoU_includingMissesZero": 0.0,
+      "instanceForegroundIoU_matchedOnly": null,
+      "multiDetectionFrames": 0,
+      "runtimeStatusCounts": {
+        "EQUIPMENT_FOUND": 1,
+        "EQUIPMENT_NOT_FOUND": 0,
+        "AMBIGUOUS": 0
+      },
+      "negativeFrames": 0,
+      "negativeFPFrames": 0,
+      "negativeFPFrameRate": null,
+      "model_candidates": {
+        "confirmedVisibleKeypoints": 2,
+        "predictedForConfirmedVisible": 0,
+        "missingConfirmedVisible": 2,
+        "pck10Correct": 0,
+        "withinAnnotatedRegionCount": 0,
+        "emittedZones": 0,
+        "predictedZonesWithoutConfirmedGT": 0,
+        "predictedZonesOnMatchedNullReference": 0,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "PCK@0.1_bbox_diagonal": 0.0,
+        "withinAnnotatedRegionRate_allConfirmedVisible": 0.0,
+        "meanError_predictedConfirmedVisibleOnly": null,
+        "framesWithZoneSuppression": 0,
+        "unconfirmed_is_not_false_positive_rate": true
+      },
+      "runtime_single_equipment": {
+        "confirmedVisibleKeypoints": 2,
+        "predictedForConfirmedVisible": 0,
+        "missingConfirmedVisible": 2,
+        "pck10Correct": 0,
+        "withinAnnotatedRegionCount": 0,
+        "emittedZones": 0,
+        "predictedZonesWithoutConfirmedGT": 0,
+        "predictedZonesOnMatchedNullReference": 0,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "PCK@0.1_bbox_diagonal": 0.0,
+        "withinAnnotatedRegionRate_allConfirmedVisible": 0.0,
+        "meanError_predictedConfirmedVisibleOnly": null,
+        "framesWithZoneSuppression": 0,
+        "unconfirmed_is_not_false_positive_rate": true
+      },
+      "temporalStabilityMeasured": false,
+      "arTrackingMeasured": false
+    },
+    "submersible_stator_repair": {
+      "nImages": 1,
+      "nGTInstances": 0,
+      "nAcceptedPredictions": 0,
+      "matchedGT_boxIoU03": 0,
+      "matchedGT_boxIoU05": 0,
+      "detectionRecall_boxIoU05": null,
+      "instanceForegroundIoU_includingMissesZero": null,
+      "instanceForegroundIoU_matchedOnly": null,
+      "multiDetectionFrames": 0,
+      "runtimeStatusCounts": {
+        "EQUIPMENT_FOUND": 0,
+        "EQUIPMENT_NOT_FOUND": 1,
+        "AMBIGUOUS": 0
+      },
+      "negativeFrames": 1,
+      "negativeFPFrames": 0,
+      "negativeFPFrameRate": 0.0,
+      "model_candidates": {
+        "confirmedVisibleKeypoints": 0,
+        "predictedForConfirmedVisible": 0,
+        "missingConfirmedVisible": 0,
+        "pck10Correct": 0,
+        "withinAnnotatedRegionCount": 0,
+        "emittedZones": 0,
+        "predictedZonesWithoutConfirmedGT": 0,
+        "predictedZonesOnMatchedNullReference": 0,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "PCK@0.1_bbox_diagonal": null,
+        "withinAnnotatedRegionRate_allConfirmedVisible": null,
+        "meanError_predictedConfirmedVisibleOnly": null,
+        "framesWithZoneSuppression": 0,
+        "unconfirmed_is_not_false_positive_rate": true
+      },
+      "runtime_single_equipment": {
+        "confirmedVisibleKeypoints": 0,
+        "predictedForConfirmedVisible": 0,
+        "missingConfirmedVisible": 0,
+        "pck10Correct": 0,
+        "withinAnnotatedRegionCount": 0,
+        "emittedZones": 0,
+        "predictedZonesWithoutConfirmedGT": 0,
+        "predictedZonesOnMatchedNullReference": 0,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "PCK@0.1_bbox_diagonal": null,
+        "withinAnnotatedRegionRate_allConfirmedVisible": null,
+        "meanError_predictedConfirmedVisibleOnly": null,
+        "framesWithZoneSuppression": 0,
+        "unconfirmed_is_not_false_positive_rate": true
+      },
+      "temporalStabilityMeasured": false,
+      "arTrackingMeasured": false
+    },
+    "tapflo_family": {
+      "nImages": 2,
+      "nGTInstances": 2,
+      "nAcceptedPredictions": 2,
+      "matchedGT_boxIoU03": 2,
+      "matchedGT_boxIoU05": 2,
+      "detectionRecall_boxIoU05": 1.0,
+      "instanceForegroundIoU_includingMissesZero": 0.9333520926024002,
+      "instanceForegroundIoU_matchedOnly": 0.9333520926024002,
+      "multiDetectionFrames": 0,
+      "runtimeStatusCounts": {
+        "EQUIPMENT_FOUND": 2,
+        "EQUIPMENT_NOT_FOUND": 0,
+        "AMBIGUOUS": 0
+      },
+      "negativeFrames": 0,
+      "negativeFPFrames": 0,
+      "negativeFPFrameRate": null,
+      "model_candidates": {
+        "confirmedVisibleKeypoints": 4,
+        "predictedForConfirmedVisible": 4,
+        "missingConfirmedVisible": 0,
+        "pck10Correct": 1,
+        "withinAnnotatedRegionCount": 2,
+        "emittedZones": 5,
+        "predictedZonesWithoutConfirmedGT": 1,
+        "predictedZonesOnMatchedNullReference": 1,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "PCK@0.1_bbox_diagonal": 0.25,
+        "withinAnnotatedRegionRate_allConfirmedVisible": 0.5,
+        "meanError_predictedConfirmedVisibleOnly": 0.10485628304995966,
+        "framesWithZoneSuppression": 0,
+        "unconfirmed_is_not_false_positive_rate": true
+      },
+      "runtime_single_equipment": {
+        "confirmedVisibleKeypoints": 4,
+        "predictedForConfirmedVisible": 4,
+        "missingConfirmedVisible": 0,
+        "pck10Correct": 1,
+        "withinAnnotatedRegionCount": 2,
+        "emittedZones": 5,
+        "predictedZonesWithoutConfirmedGT": 1,
+        "predictedZonesOnMatchedNullReference": 1,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "PCK@0.1_bbox_diagonal": 0.25,
+        "withinAnnotatedRegionRate_allConfirmedVisible": 0.5,
+        "meanError_predictedConfirmedVisibleOnly": 0.10485628304995966,
+        "framesWithZoneSuppression": 0,
+        "unconfirmed_is_not_false_positive_rate": true
+      },
+      "temporalStabilityMeasured": false,
+      "arTrackingMeasured": false
+    },
+    "trane_chiller": {
+      "nImages": 2,
+      "nGTInstances": 2,
+      "nAcceptedPredictions": 0,
+      "matchedGT_boxIoU03": 0,
+      "matchedGT_boxIoU05": 0,
+      "detectionRecall_boxIoU05": 0.0,
+      "instanceForegroundIoU_includingMissesZero": 0.0,
+      "instanceForegroundIoU_matchedOnly": null,
+      "multiDetectionFrames": 0,
+      "runtimeStatusCounts": {
+        "EQUIPMENT_FOUND": 0,
+        "EQUIPMENT_NOT_FOUND": 2,
+        "AMBIGUOUS": 0
+      },
+      "negativeFrames": 0,
+      "negativeFPFrames": 0,
+      "negativeFPFrameRate": null,
+      "model_candidates": {
+        "confirmedVisibleKeypoints": 3,
+        "predictedForConfirmedVisible": 0,
+        "missingConfirmedVisible": 3,
+        "pck10Correct": 0,
+        "withinAnnotatedRegionCount": 0,
+        "emittedZones": 0,
+        "predictedZonesWithoutConfirmedGT": 0,
+        "predictedZonesOnMatchedNullReference": 0,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "PCK@0.1_bbox_diagonal": 0.0,
+        "withinAnnotatedRegionRate_allConfirmedVisible": 0.0,
+        "meanError_predictedConfirmedVisibleOnly": null,
+        "framesWithZoneSuppression": 0,
+        "unconfirmed_is_not_false_positive_rate": true
+      },
+      "runtime_single_equipment": {
+        "confirmedVisibleKeypoints": 3,
+        "predictedForConfirmedVisible": 0,
+        "missingConfirmedVisible": 3,
+        "pck10Correct": 0,
+        "withinAnnotatedRegionCount": 0,
+        "emittedZones": 0,
+        "predictedZonesWithoutConfirmedGT": 0,
+        "predictedZonesOnMatchedNullReference": 0,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "PCK@0.1_bbox_diagonal": 0.0,
+        "withinAnnotatedRegionRate_allConfirmedVisible": 0.0,
+        "meanError_predictedConfirmedVisibleOnly": null,
+        "framesWithZoneSuppression": 0,
+        "unconfirmed_is_not_false_positive_rate": true
+      },
+      "temporalStabilityMeasured": false,
+      "arTrackingMeasured": false
+    }
+  },
+  "group_overlap_across_manifest_splits": {},
+  "skipped_rows": [],
+  "images": [
+    {
+      "id": "legacy_03",
+      "group": "legacy_jtn",
+      "split": "test",
+      "quality": "legacy_real_photo",
+      "image": "C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\work\\pump_real\\03.jpg",
+      "width": 826,
+      "height": 550,
+      "image_sha256": "dcf8dc784f829bf781dd60b2f3ec926031eb2133078c66e6f9877c3d59608cc5",
+      "explicit_negative": false,
+      "n_gt": 1,
+      "n_predictions": 1,
+      "n_matches_iou50": 0,
+      "runtime_status": "EQUIPMENT_FOUND",
+      "ground_truth_diagnostics": [
+        {
+          "gt_instance": 0,
+          "bbox": [
+            57.82000000000001,
+            121.0,
+            751.6600000000001,
+            544.5
+          ],
+          "mask_foreground_pixels": 190339,
+          "matched_prediction": null,
+          "matched_bbox_iou": null,
+          "detected_box_iou50": false,
+          "mask_iou": 0.0
+        }
+      ],
+      "model_candidates": {
+        "confirmedVisibleKeypoints": 2,
+        "predictedForConfirmedVisible": 0,
+        "missingConfirmedVisible": 2,
+        "pck10Correct": 0,
+        "withinAnnotatedRegionCount": 0,
+        "emittedZones": 0,
+        "predictedZonesWithoutConfirmedGT": 0,
+        "predictedZonesOnMatchedNullReference": 0,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "zonesSuppressedByMultiEquipmentPolicy": false,
+        "details": [
+          {
+            "gt_instance": 0,
+            "zone": "frame",
+            "gt": {
+              "point": [
+                0.51,
+                0.79
+              ],
+              "bbox": [
+                0.455206,
+                0.76,
+                0.577482,
+                0.834545
+              ]
+            },
+            "predicted": null,
+            "error_bbox_diagonal": null,
+            "pck10": false,
+            "withinAnnotatedRegion": false
+          },
+          {
+            "gt_instance": 0,
+            "zone": "casing",
+            "gt": {
+              "point": [
+                0.54,
+                0.52
+              ],
+              "bbox": [
+                0.470944,
+                0.485455,
+                0.569007,
+                0.614545
+              ]
+            },
+            "predicted": null,
+            "error_bbox_diagonal": null,
+            "pck10": false,
+            "withinAnnotatedRegion": false
+          }
+        ]
+      },
+      "runtime_single_equipment": {
+        "confirmedVisibleKeypoints": 2,
+        "predictedForConfirmedVisible": 0,
+        "missingConfirmedVisible": 2,
+        "pck10Correct": 0,
+        "withinAnnotatedRegionCount": 0,
+        "emittedZones": 0,
+        "predictedZonesWithoutConfirmedGT": 0,
+        "predictedZonesOnMatchedNullReference": 0,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "zonesSuppressedByMultiEquipmentPolicy": false,
+        "details": [
+          {
+            "gt_instance": 0,
+            "zone": "frame",
+            "gt": {
+              "point": [
+                0.51,
+                0.79
+              ],
+              "bbox": [
+                0.455206,
+                0.76,
+                0.577482,
+                0.834545
+              ]
+            },
+            "predicted": null,
+            "error_bbox_diagonal": null,
+            "pck10": false,
+            "withinAnnotatedRegion": false
+          },
+          {
+            "gt_instance": 0,
+            "zone": "casing",
+            "gt": {
+              "point": [
+                0.54,
+                0.52
+              ],
+              "bbox": [
+                0.470944,
+                0.485455,
+                0.569007,
+                0.614545
+              ]
+            },
+            "predicted": null,
+            "error_bbox_diagonal": null,
+            "pck10": false,
+            "withinAnnotatedRegion": false
+          }
+        ]
+      },
+      "accepted_predictions": [
+        {
+          "prediction_index": 0,
+          "bbox": [
+            254.40528869628906,
+            113.5672378540039,
+            350.96905517578125,
+            371.4682922363281
+          ],
+          "confidence": 0.3656584918498993,
+          "area_fraction": 0.05481817563325902,
+          "zones": {},
+          "zone_gate_diagnostics": [],
+          "pose_index": null,
+          "association_bbox_iou": 0.0684090476623116,
+          "mask_foreground_pixels": 20346,
+          "mask_sha256_row_major_uint8": "5d7ab17b34c4607e42558e6fccafca4eee042749b74a9851a630511700333023"
+        }
+      ],
+      "rejected_segmentation_predictions": [],
+      "raw_poses_above_model_threshold": [
+        {
+          "bbox": [
+            36.008819580078125,
+            81.84851837158203,
+            813.6287231445312,
+            550.0
+          ],
+          "confidence": 0.723138689994812,
+          "keypoints": [
+            [
+              397.6458435058594,
+              540.552978515625,
+              0.9577853679656982
+            ],
+            [
+              368.5491638183594,
+              448.46295166015625,
+              0.987967848777771
+            ],
+            [
+              510.972900390625,
+              295.04193115234375,
+              0.9567320942878723
+            ]
+          ]
+        }
+      ],
+      "desktop_predict_pair_ms": 320.95069999923
+    },
+    {
+      "id": "wc_046",
+      "group": "kops2_impeller_exhibit",
+      "split": "test",
+      "quality": "negative",
+      "image": "C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\work\\pump_v2_data\\commons\\wc_046.jpg",
+      "width": 960,
+      "height": 720,
+      "image_sha256": "fa7314056c28c8cf7ae7b9557a4788bfdbfc10a7929849fc4b2a35a06d02b30a",
+      "explicit_negative": true,
+      "n_gt": 0,
+      "n_predictions": 0,
+      "n_matches_iou50": 0,
+      "runtime_status": "EQUIPMENT_NOT_FOUND",
+      "ground_truth_diagnostics": [],
+      "model_candidates": {
+        "confirmedVisibleKeypoints": 0,
+        "predictedForConfirmedVisible": 0,
+        "missingConfirmedVisible": 0,
+        "pck10Correct": 0,
+        "withinAnnotatedRegionCount": 0,
+        "emittedZones": 0,
+        "predictedZonesWithoutConfirmedGT": 0,
+        "predictedZonesOnMatchedNullReference": 0,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "zonesSuppressedByMultiEquipmentPolicy": false,
+        "details": []
+      },
+      "runtime_single_equipment": {
+        "confirmedVisibleKeypoints": 0,
+        "predictedForConfirmedVisible": 0,
+        "missingConfirmedVisible": 0,
+        "pck10Correct": 0,
+        "withinAnnotatedRegionCount": 0,
+        "emittedZones": 0,
+        "predictedZonesWithoutConfirmedGT": 0,
+        "predictedZonesOnMatchedNullReference": 0,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "zonesSuppressedByMultiEquipmentPolicy": false,
+        "details": []
+      },
+      "accepted_predictions": [],
+      "rejected_segmentation_predictions": [],
+      "raw_poses_above_model_threshold": [
+        {
+          "bbox": [
+            148.04119873046875,
+            185.316162109375,
+            674.4441528320312,
+            582.0430297851562
+          ],
+          "confidence": 0.6897809505462646,
+          "keypoints": [
+            [
+              392.8558349609375,
+              525.8925170898438,
+              0.9536106586456299
+            ],
+            [
+              512.612548828125,
+              356.4433898925781,
+              0.9686528444290161
+            ],
+            [
+              387.808349609375,
+              331.8562316894531,
+              0.8924236297607422
+            ]
+          ]
+        }
+      ],
+      "desktop_predict_pair_ms": 105.07109999889508
+    },
+    {
+      "id": "wc_101",
+      "group": "trane_chiller",
+      "split": "test",
+      "quality": "usable_approximate",
+      "image": "C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\work\\pump_v2_data\\commons\\wc_101.jpg",
+      "width": 960,
+      "height": 720,
+      "image_sha256": "7866dd33bdbce8c149c49ea08c534d7c144584ebe4682a9d3fbabf6d3efcfaf8",
+      "explicit_negative": false,
+      "n_gt": 1,
+      "n_predictions": 0,
+      "n_matches_iou50": 0,
+      "runtime_status": "EQUIPMENT_NOT_FOUND",
+      "ground_truth_diagnostics": [
+        {
+          "gt_instance": 0,
+          "bbox": [
+            361.99968,
+            338.99976,
+            438.0,
+            499.99967999999996
+          ],
+          "mask_foreground_pixels": 9309,
+          "matched_prediction": null,
+          "matched_bbox_iou": null,
+          "detected_box_iou50": false,
+          "mask_iou": 0.0
+        }
+      ],
+      "model_candidates": {
+        "confirmedVisibleKeypoints": 1,
+        "predictedForConfirmedVisible": 0,
+        "missingConfirmedVisible": 1,
+        "pck10Correct": 0,
+        "withinAnnotatedRegionCount": 0,
+        "emittedZones": 0,
+        "predictedZonesWithoutConfirmedGT": 0,
+        "predictedZonesOnMatchedNullReference": 0,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "zonesSuppressedByMultiEquipmentPolicy": false,
+        "details": [
+          {
+            "gt_instance": 0,
+            "zone": "casing",
+            "gt": {
+              "point": [
+                0.408333,
+                0.659722
+              ],
+              "bbox": [
+                0.379167,
+                0.623611,
+                0.45,
+                0.690278
+              ]
+            },
+            "predicted": null,
+            "error_bbox_diagonal": null,
+            "pck10": false,
+            "withinAnnotatedRegion": false
+          }
+        ]
+      },
+      "runtime_single_equipment": {
+        "confirmedVisibleKeypoints": 1,
+        "predictedForConfirmedVisible": 0,
+        "missingConfirmedVisible": 1,
+        "pck10Correct": 0,
+        "withinAnnotatedRegionCount": 0,
+        "emittedZones": 0,
+        "predictedZonesWithoutConfirmedGT": 0,
+        "predictedZonesOnMatchedNullReference": 0,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "zonesSuppressedByMultiEquipmentPolicy": false,
+        "details": [
+          {
+            "gt_instance": 0,
+            "zone": "casing",
+            "gt": {
+              "point": [
+                0.408333,
+                0.659722
+              ],
+              "bbox": [
+                0.379167,
+                0.623611,
+                0.45,
+                0.690278
+              ]
+            },
+            "predicted": null,
+            "error_bbox_diagonal": null,
+            "pck10": false,
+            "withinAnnotatedRegion": false
+          }
+        ]
+      },
+      "accepted_predictions": [],
+      "rejected_segmentation_predictions": [],
+      "raw_poses_above_model_threshold": [
+        {
+          "bbox": [
+            3.160822868347168,
+            0.0,
+            960.0,
+            720.0
+          ],
+          "confidence": 0.41197723150253296,
+          "keypoints": [
+            [
+              523.9779052734375,
+              720.0,
+              0.9818165302276611
+            ],
+            [
+              630.8878173828125,
+              441.4643859863281,
+              0.9826657772064209
+            ],
+            [
+              444.8631896972656,
+              330.9446716308594,
+              0.9244428277015686
+            ]
+          ]
+        }
+      ],
+      "desktop_predict_pair_ms": 83.80179999949178
+    },
+    {
+      "id": "wc_102",
+      "group": "trane_chiller",
+      "split": "test",
+      "quality": "usable_approximate",
+      "image": "C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\work\\pump_v2_data\\commons\\wc_102.jpg",
+      "width": 960,
+      "height": 720,
+      "image_sha256": "2c9d50af675c9a90e233aaadd6cba2d142a645a8f4cf7579902e017e18400f2c",
+      "explicit_negative": false,
+      "n_gt": 1,
+      "n_predictions": 0,
+      "n_matches_iou50": 0,
+      "runtime_status": "EQUIPMENT_NOT_FOUND",
+      "ground_truth_diagnostics": [
+        {
+          "gt_instance": 0,
+          "bbox": [
+            493.00032000000004,
+            366.99984,
+            624.0,
+            560.0001599999999
+          ],
+          "mask_foreground_pixels": 16965,
+          "matched_prediction": null,
+          "matched_bbox_iou": null,
+          "detected_box_iou50": false,
+          "mask_iou": 0.0
+        }
+      ],
+      "model_candidates": {
+        "confirmedVisibleKeypoints": 2,
+        "predictedForConfirmedVisible": 0,
+        "missingConfirmedVisible": 2,
+        "pck10Correct": 0,
+        "withinAnnotatedRegionCount": 0,
+        "emittedZones": 0,
+        "predictedZonesWithoutConfirmedGT": 0,
+        "predictedZonesOnMatchedNullReference": 0,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "zonesSuppressedByMultiEquipmentPolicy": false,
+        "details": [
+          {
+            "gt_instance": 0,
+            "zone": "casing",
+            "gt": {
+              "point": [
+                0.588542,
+                0.748611
+              ],
+              "bbox": [
+                0.520833,
+                0.716667,
+                0.646875,
+                0.777778
+              ]
+            },
+            "predicted": null,
+            "error_bbox_diagonal": null,
+            "pck10": false,
+            "withinAnnotatedRegion": false
+          },
+          {
+            "gt_instance": 0,
+            "zone": "terminal_box",
+            "gt": {
+              "point": [
+                0.53125,
+                0.623611
+              ],
+              "bbox": [
+                0.519792,
+                0.6,
+                0.547917,
+                0.654167
+              ]
+            },
+            "predicted": null,
+            "error_bbox_diagonal": null,
+            "pck10": false,
+            "withinAnnotatedRegion": false
+          }
+        ]
+      },
+      "runtime_single_equipment": {
+        "confirmedVisibleKeypoints": 2,
+        "predictedForConfirmedVisible": 0,
+        "missingConfirmedVisible": 2,
+        "pck10Correct": 0,
+        "withinAnnotatedRegionCount": 0,
+        "emittedZones": 0,
+        "predictedZonesWithoutConfirmedGT": 0,
+        "predictedZonesOnMatchedNullReference": 0,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "zonesSuppressedByMultiEquipmentPolicy": false,
+        "details": [
+          {
+            "gt_instance": 0,
+            "zone": "casing",
+            "gt": {
+              "point": [
+                0.588542,
+                0.748611
+              ],
+              "bbox": [
+                0.520833,
+                0.716667,
+                0.646875,
+                0.777778
+              ]
+            },
+            "predicted": null,
+            "error_bbox_diagonal": null,
+            "pck10": false,
+            "withinAnnotatedRegion": false
+          },
+          {
+            "gt_instance": 0,
+            "zone": "terminal_box",
+            "gt": {
+              "point": [
+                0.53125,
+                0.623611
+              ],
+              "bbox": [
+                0.519792,
+                0.6,
+                0.547917,
+                0.654167
+              ]
+            },
+            "predicted": null,
+            "error_bbox_diagonal": null,
+            "pck10": false,
+            "withinAnnotatedRegion": false
+          }
+        ]
+      },
+      "accepted_predictions": [],
+      "rejected_segmentation_predictions": [],
+      "raw_poses_above_model_threshold": [
+        {
+          "bbox": [
+            100.2116470336914,
+            0.0,
+            960.0,
+            708.453369140625
+          ],
+          "confidence": 0.572969377040863,
+          "keypoints": [
+            [
+              405.5550231933594,
+              645.2420043945312,
+              0.9634937047958374
+            ],
+            [
+              503.6539611816406,
+              237.6767120361328,
+              0.9033214449882507
+            ],
+            [
+              607.0647583007812,
+              232.41175842285156,
+              0.9077368974685669
+            ]
+          ]
+        }
+      ],
+      "desktop_predict_pair_ms": 101.26719999971101
+    },
+    {
+      "id": "we_046",
+      "group": "submersible_stator_repair",
+      "split": "test",
+      "quality": "negative",
+      "image": "C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\work\\pump_v2_data\\commons_electric\\we_046.jpg",
+      "width": 768,
+      "height": 1024,
+      "image_sha256": "0c5e5c9f8483043cf596022a88add8eeb64925e29de71d39a89bf32b935eb501",
+      "explicit_negative": true,
+      "n_gt": 0,
+      "n_predictions": 0,
+      "n_matches_iou50": 0,
+      "runtime_status": "EQUIPMENT_NOT_FOUND",
+      "ground_truth_diagnostics": [],
+      "model_candidates": {
+        "confirmedVisibleKeypoints": 0,
+        "predictedForConfirmedVisible": 0,
+        "missingConfirmedVisible": 0,
+        "pck10Correct": 0,
+        "withinAnnotatedRegionCount": 0,
+        "emittedZones": 0,
+        "predictedZonesWithoutConfirmedGT": 0,
+        "predictedZonesOnMatchedNullReference": 0,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "zonesSuppressedByMultiEquipmentPolicy": false,
+        "details": []
+      },
+      "runtime_single_equipment": {
+        "confirmedVisibleKeypoints": 0,
+        "predictedForConfirmedVisible": 0,
+        "missingConfirmedVisible": 0,
+        "pck10Correct": 0,
+        "withinAnnotatedRegionCount": 0,
+        "emittedZones": 0,
+        "predictedZonesWithoutConfirmedGT": 0,
+        "predictedZonesOnMatchedNullReference": 0,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "zonesSuppressedByMultiEquipmentPolicy": false,
+        "details": []
+      },
+      "accepted_predictions": [],
+      "rejected_segmentation_predictions": [],
+      "raw_poses_above_model_threshold": [
+        {
+          "bbox": [
+            147.96920776367188,
+            0.0,
+            605.016357421875,
+            726.6802368164062
+          ],
+          "confidence": 0.7178887128829956,
+          "keypoints": [
+            [
+              438.5514831542969,
+              743.2348022460938,
+              0.9222191572189331
+            ],
+            [
+              476.77044677734375,
+              564.447265625,
+              0.9474680423736572
+            ],
+            [
+              381.0820007324219,
+              505.9792175292969,
+              0.9054257273674011
+            ]
+          ]
+        },
+        {
+          "bbox": [
+            149.91549682617188,
+            248.846923828125,
+            600.2691040039062,
+            724.6636352539062
+          ],
+          "confidence": 0.33371445536613464,
+          "keypoints": [
+            [
+              435.06219482421875,
+              701.5799560546875,
+              0.9033944010734558
+            ],
+            [
+              473.84808349609375,
+              569.79443359375,
+              0.9229914546012878
+            ],
+            [
+              396.6842956542969,
+              530.44677734375,
+              0.8706524968147278
+            ]
+          ]
+        }
+      ],
+      "desktop_predict_pair_ms": 101.36810000039986
+    },
+    {
+      "id": "we_063",
+      "group": "karany",
+      "split": "test",
+      "quality": "usable_approximate",
+      "image": "C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\work\\pump_v2_data\\commons_electric\\we_063.jpg",
+      "width": 960,
+      "height": 640,
+      "image_sha256": "942df19f72df3235c744afa857dd4e49e95cf18785a1ad6313f7aa2ae63b91e5",
+      "explicit_negative": false,
+      "n_gt": 1,
+      "n_predictions": 2,
+      "n_matches_iou50": 0,
+      "runtime_status": "AMBIGUOUS",
+      "ground_truth_diagnostics": [
+        {
+          "gt_instance": 0,
+          "bbox": [
+            85.00032,
+            183.00032000000002,
+            958.99968,
+            631.00032
+          ],
+          "mask_foreground_pixels": 222229,
+          "matched_prediction": 1,
+          "matched_bbox_iou": 0.43331030154730155,
+          "detected_box_iou50": false,
+          "mask_iou": 0.5625755582420708
+        }
+      ],
+      "model_candidates": {
+        "confirmedVisibleKeypoints": 1,
+        "predictedForConfirmedVisible": 0,
+        "missingConfirmedVisible": 1,
+        "pck10Correct": 0,
+        "withinAnnotatedRegionCount": 0,
+        "emittedZones": 0,
+        "predictedZonesWithoutConfirmedGT": 0,
+        "predictedZonesOnMatchedNullReference": 0,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "zonesSuppressedByMultiEquipmentPolicy": false,
+        "details": [
+          {
+            "gt_instance": 0,
+            "zone": "casing",
+            "gt": {
+              "point": [
+                0.569792,
+                0.479687
+              ],
+              "bbox": [
+                0.339583,
+                0.315625,
+                0.830208,
+                0.95625
+              ]
+            },
+            "predicted": null,
+            "error_bbox_diagonal": null,
+            "pck10": false,
+            "withinAnnotatedRegion": false
+          }
+        ]
+      },
+      "runtime_single_equipment": {
+        "confirmedVisibleKeypoints": 1,
+        "predictedForConfirmedVisible": 0,
+        "missingConfirmedVisible": 1,
+        "pck10Correct": 0,
+        "withinAnnotatedRegionCount": 0,
+        "emittedZones": 0,
+        "predictedZonesWithoutConfirmedGT": 0,
+        "predictedZonesOnMatchedNullReference": 0,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "zonesSuppressedByMultiEquipmentPolicy": true,
+        "details": [
+          {
+            "gt_instance": 0,
+            "zone": "casing",
+            "gt": {
+              "point": [
+                0.569792,
+                0.479687
+              ],
+              "bbox": [
+                0.339583,
+                0.315625,
+                0.830208,
+                0.95625
+              ]
+            },
+            "predicted": null,
+            "error_bbox_diagonal": null,
+            "pck10": false,
+            "withinAnnotatedRegion": false
+          }
+        ]
+      },
+      "accepted_predictions": [
+        {
+          "prediction_index": 0,
+          "bbox": [
+            100.67744445800781,
+            181.12342834472656,
+            365.6755065917969,
+            368.9021301269531
+          ],
+          "confidence": 0.5145061016082764,
+          "area_fraction": 0.08099119805060014,
+          "zones": {},
+          "zone_gate_diagnostics": [],
+          "pose_index": null,
+          "association_bbox_iou": 0.11660915396700715,
+          "mask_foreground_pixels": 41180,
+          "mask_sha256_row_major_uint8": "969ae26bbffd80e67c43faf45ae72513b2e3692244795db9b734b38c8521512f"
+        },
+        {
+          "prediction_index": 1,
+          "bbox": [
+            306.50982666015625,
+            190.4156036376953,
+            742.9518432617188,
+            579.15771484375
+          ],
+          "confidence": 0.37698987126350403,
+          "area_fraction": 0.2761448420454417,
+          "zones": {},
+          "zone_gate_diagnostics": [],
+          "pose_index": null,
+          "association_bbox_iou": 0.4749857166537778,
+          "mask_foreground_pixels": 129338,
+          "mask_sha256_row_major_uint8": "623ddd8333718a7d49da7faca72695d811b80765b18d564f60fb8ba18097c47f"
+        }
+      ],
+      "rejected_segmentation_predictions": [],
+      "raw_poses_above_model_threshold": [
+        {
+          "bbox": [
+            73.58649444580078,
+            44.06276321411133,
+            960.0,
+            525.4782104492188
+          ],
+          "confidence": 0.6276793479919434,
+          "keypoints": [
+            [
+              608.6793212890625,
+              483.6781005859375,
+              0.9574533700942993
+            ],
+            [
+              440.9360046386719,
+              375.0923156738281,
+              0.9744508862495422
+            ],
+            [
+              678.1848754882812,
+              235.89138793945312,
+              0.9301522970199585
+            ]
+          ]
+        },
+        {
+          "bbox": [
+            296.80535888671875,
+            71.08210754394531,
+            960.0,
+            549.9078979492188
+          ],
+          "confidence": 0.6137228608131409,
+          "keypoints": [
+            [
+              662.9118041992188,
+              528.2639770507812,
+              0.9486852288246155
+            ],
+            [
+              484.4837951660156,
+              383.55706787109375,
+              0.9593585133552551
+            ],
+            [
+              754.0536499023438,
+              291.4933166503906,
+              0.9122084975242615
+            ]
+          ]
+        }
+      ],
+      "desktop_predict_pair_ms": 80.64569999987725
+    },
+    {
+      "id": "we_169",
+      "group": "tapflo_family",
+      "split": "test",
+      "quality": "usable_approximate",
+      "image": "C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\work\\pump_v2_data\\commons_electric\\we_169.jpg",
+      "width": 960,
+      "height": 638,
+      "image_sha256": "cebfda900e1055652fdf53f4ffbe283c89f72777de56172212974f9313ea7c79",
+      "explicit_negative": false,
+      "n_gt": 1,
+      "n_predictions": 1,
+      "n_matches_iou50": 1,
+      "runtime_status": "EQUIPMENT_FOUND",
+      "ground_truth_diagnostics": [
+        {
+          "gt_instance": 0,
+          "bbox": [
+            63.0,
+            178.000086,
+            877.00032,
+            603.999704
+          ],
+          "mask_foreground_pixels": 243514,
+          "matched_prediction": 0,
+          "matched_bbox_iou": 0.9348461206121318,
+          "detected_box_iou50": true,
+          "mask_iou": 0.902957604189649
+        }
+      ],
+      "model_candidates": {
+        "confirmedVisibleKeypoints": 2,
+        "predictedForConfirmedVisible": 2,
+        "missingConfirmedVisible": 0,
+        "pck10Correct": 0,
+        "withinAnnotatedRegionCount": 1,
+        "emittedZones": 3,
+        "predictedZonesWithoutConfirmedGT": 1,
+        "predictedZonesOnMatchedNullReference": 1,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "zonesSuppressedByMultiEquipmentPolicy": false,
+        "details": [
+          {
+            "gt_instance": 0,
+            "zone": "casing",
+            "gt": {
+              "point": [
+                0.301042,
+                0.62069
+              ],
+              "bbox": [
+                0.065625,
+                0.288401,
+                0.373958,
+                0.902821
+              ]
+            },
+            "predicted": {
+              "point": [
+                0.19251171747843424,
+                0.5890006421128037
+              ],
+              "confidence": 0.978912889957428
+            },
+            "error_bbox_diagonal": 0.11552045309024571,
+            "pck10": false,
+            "withinAnnotatedRegion": true
+          },
+          {
+            "gt_instance": 0,
+            "zone": "terminal_box",
+            "gt": {
+              "point": [
+                0.557292,
+                0.443574
+              ],
+              "bbox": [
+                0.447917,
+                0.278997,
+                0.617708,
+                0.509404
+              ]
+            },
+            "predicted": {
+              "point": [
+                0.4872551600138346,
+                0.5501723334333366
+              ],
+              "confidence": 0.9425912499427795
+            },
+            "error_bbox_diagonal": 0.10409356272114936,
+            "pck10": false,
+            "withinAnnotatedRegion": false
+          }
+        ]
+      },
+      "runtime_single_equipment": {
+        "confirmedVisibleKeypoints": 2,
+        "predictedForConfirmedVisible": 2,
+        "missingConfirmedVisible": 0,
+        "pck10Correct": 0,
+        "withinAnnotatedRegionCount": 1,
+        "emittedZones": 3,
+        "predictedZonesWithoutConfirmedGT": 1,
+        "predictedZonesOnMatchedNullReference": 1,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "zonesSuppressedByMultiEquipmentPolicy": false,
+        "details": [
+          {
+            "gt_instance": 0,
+            "zone": "casing",
+            "gt": {
+              "point": [
+                0.301042,
+                0.62069
+              ],
+              "bbox": [
+                0.065625,
+                0.288401,
+                0.373958,
+                0.902821
+              ]
+            },
+            "predicted": {
+              "point": [
+                0.19251171747843424,
+                0.5890006421128037
+              ],
+              "confidence": 0.978912889957428
+            },
+            "error_bbox_diagonal": 0.11552045309024571,
+            "pck10": false,
+            "withinAnnotatedRegion": true
+          },
+          {
+            "gt_instance": 0,
+            "zone": "terminal_box",
+            "gt": {
+              "point": [
+                0.557292,
+                0.443574
+              ],
+              "bbox": [
+                0.447917,
+                0.278997,
+                0.617708,
+                0.509404
+              ]
+            },
+            "predicted": {
+              "point": [
+                0.4872551600138346,
+                0.5501723334333366
+              ],
+              "confidence": 0.9425912499427795
+            },
+            "error_bbox_diagonal": 0.10409356272114936,
+            "pck10": false,
+            "withinAnnotatedRegion": false
+          }
+        ]
+      },
+      "accepted_predictions": [
+        {
+          "prediction_index": 0,
+          "bbox": [
+            56.20886993408203,
+            171.77674865722656,
+            883.9437255859375,
+            619.9050903320312
+          ],
+          "confidence": 0.7957648634910583,
+          "area_fraction": 0.6056221398408108,
+          "zones": {
+            "frame": {
+              "point": [
+                0.3787205696105957,
+                0.8560591072871767
+              ],
+              "confidence": 0.9682148694992065
+            },
+            "casing": {
+              "point": [
+                0.19251171747843424,
+                0.5890006421128037
+              ],
+              "confidence": 0.978912889957428
+            },
+            "terminal_box": {
+              "point": [
+                0.4872551600138346,
+                0.5501723334333366
+              ],
+              "confidence": 0.9425912499427795
+            }
+          },
+          "zone_gate_diagnostics": [
+            {
+              "id": "frame",
+              "reason": "accepted"
+            },
+            {
+              "id": "casing",
+              "reason": "accepted"
+            },
+            {
+              "id": "terminal_box",
+              "reason": "accepted"
+            }
+          ],
+          "pose_index": 1,
+          "association_bbox_iou": 0.6935503784708973,
+          "mask_foreground_pixels": 248117,
+          "mask_sha256_row_major_uint8": "f3ba43b48f2b39e3241c7f6d6d5672414c6276cea0a9f63126359c73854dbf1b"
+        }
+      ],
+      "rejected_segmentation_predictions": [],
+      "raw_poses_above_model_threshold": [
+        {
+          "bbox": [
+            344.70379638671875,
+            119.9218978881836,
+            902.8575439453125,
+            638.0
+          ],
+          "confidence": 0.8802295923233032,
+          "keypoints": [
+            [
+              581.9172973632812,
+              573.7606811523438,
+              0.953970193862915
+            ],
+            [
+              675.9237670898438,
+              337.2092590332031,
+              0.9694483876228333
+            ],
+            [
+              655.5863647460938,
+              313.3255920410156,
+              0.931053638458252
+            ]
+          ]
+        },
+        {
+          "bbox": [
+            21.89448356628418,
+            77.28142547607422,
+            778.5260009765625,
+            611.0596923828125
+          ],
+          "confidence": 0.6431258320808411,
+          "keypoints": [
+            [
+              363.5717468261719,
+              546.1657104492188,
+              0.9682148694992065
+            ],
+            [
+              184.81124877929688,
+              375.78240966796875,
+              0.978912889957428
+            ],
+            [
+              467.76495361328125,
+              351.00994873046875,
+              0.9425912499427795
+            ]
+          ]
+        }
+      ],
+      "desktop_predict_pair_ms": 81.09270000022661
+    },
+    {
+      "id": "we_170",
+      "group": "tapflo_family",
+      "split": "test",
+      "quality": "usable_approximate",
+      "image": "C:\\Users\\Fanur\\Documents\\Codex\\2026-11-13\\x20\\work\\pump_v2_data\\commons_electric\\we_170.jpg",
+      "width": 960,
+      "height": 638,
+      "image_sha256": "9c5ff66031241f2bbd1368a289c086df6465c25c4382532c986c15ae23773b1b",
+      "explicit_negative": false,
+      "n_gt": 1,
+      "n_predictions": 1,
+      "n_matches_iou50": 1,
+      "runtime_status": "EQUIPMENT_FOUND",
+      "ground_truth_diagnostics": [
+        {
+          "gt_instance": 0,
+          "bbox": [
+            208.00032,
+            135.00016200000002,
+            780.0,
+            517.999856
+          ],
+          "mask_foreground_pixels": 141007,
+          "matched_prediction": 0,
+          "matched_bbox_iou": 0.9802477884648566,
+          "detected_box_iou50": true,
+          "mask_iou": 0.9637465810151514
+        }
+      ],
+      "model_candidates": {
+        "confirmedVisibleKeypoints": 2,
+        "predictedForConfirmedVisible": 2,
+        "missingConfirmedVisible": 0,
+        "pck10Correct": 1,
+        "withinAnnotatedRegionCount": 1,
+        "emittedZones": 2,
+        "predictedZonesWithoutConfirmedGT": 0,
+        "predictedZonesOnMatchedNullReference": 0,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "zonesSuppressedByMultiEquipmentPolicy": false,
+        "details": [
+          {
+            "gt_instance": 0,
+            "zone": "casing",
+            "gt": {
+              "point": [
+                0.335417,
+                0.652038
+              ],
+              "bbox": [
+                0.215625,
+                0.344828,
+                0.455208,
+                0.811912
+              ]
+            },
+            "predicted": {
+              "point": [
+                0.38641516367594403,
+                0.5960402055220171
+              ],
+              "confidence": 0.9856401681900024
+            },
+            "error_bbox_diagonal": 0.08804352032140605,
+            "pck10": true,
+            "withinAnnotatedRegion": true
+          },
+          {
+            "gt_instance": 0,
+            "zone": "terminal_box",
+            "gt": {
+              "point": [
+                0.564583,
+                0.310345
+              ],
+              "bbox": [
+                0.483333,
+                0.211599,
+                0.705208,
+                0.373041
+              ]
+            },
+            "predicted": {
+              "point": [
+                0.6209184010823567,
+                0.39611979039111483
+              ],
+              "confidence": 0.9544304013252258
+            },
+            "error_bbox_diagonal": 0.11176759606703753,
+            "pck10": false,
+            "withinAnnotatedRegion": false
+          }
+        ]
+      },
+      "runtime_single_equipment": {
+        "confirmedVisibleKeypoints": 2,
+        "predictedForConfirmedVisible": 2,
+        "missingConfirmedVisible": 0,
+        "pck10Correct": 1,
+        "withinAnnotatedRegionCount": 1,
+        "emittedZones": 2,
+        "predictedZonesWithoutConfirmedGT": 0,
+        "predictedZonesOnMatchedNullReference": 0,
+        "predictedZonesOnUnmatchedEquipment": 0,
+        "zonesSuppressedByMultiEquipmentPolicy": false,
+        "details": [
+          {
+            "gt_instance": 0,
+            "zone": "casing",
+            "gt": {
+              "point": [
+                0.335417,
+                0.652038
+              ],
+              "bbox": [
+                0.215625,
+                0.344828,
+                0.455208,
+                0.811912
+              ]
+            },
+            "predicted": {
+              "point": [
+                0.38641516367594403,
+                0.5960402055220171
+              ],
+              "confidence": 0.9856401681900024
+            },
+            "error_bbox_diagonal": 0.08804352032140605,
+            "pck10": true,
+            "withinAnnotatedRegion": true
+          },
+          {
+            "gt_instance": 0,
+            "zone": "terminal_box",
+            "gt": {
+              "point": [
+                0.564583,
+                0.310345
+              ],
+              "bbox": [
+                0.483333,
+                0.211599,
+                0.705208,
+                0.373041
+              ]
+            },
+            "predicted": {
+              "point": [
+                0.6209184010823567,
+                0.39611979039111483
+              ],
+              "confidence": 0.9544304013252258
+            },
+            "error_bbox_diagonal": 0.11176759606703753,
+            "pck10": false,
+            "withinAnnotatedRegion": false
+          }
+        ]
+      },
+      "accepted_predictions": [
+        {
+          "prediction_index": 0,
+          "bbox": [
+            204.05809020996094,
+            136.6110382080078,
+            782.6748046875,
+            516.351806640625
+          ],
+          "confidence": 0.9072641730308533,
+          "area_fraction": 0.3587453562298474,
+          "zones": {
+            "casing": {
+              "point": [
+                0.38641516367594403,
+                0.5960402055220171
+              ],
+              "confidence": 0.9856401681900024
+            },
+            "terminal_box": {
+              "point": [
+                0.6209184010823567,
+                0.39611979039111483
+              ],
+              "confidence": 0.9544304013252258
+            }
+          },
+          "zone_gate_diagnostics": [
+            {
+              "id": "frame",
+              "reason": "outside_equipment_bbox"
+            },
+            {
+              "id": "casing",
+              "reason": "accepted"
+            },
+            {
+              "id": "terminal_box",
+              "reason": "accepted"
+            }
+          ],
+          "pose_index": 0,
+          "association_bbox_iou": 0.8454996947012049,
+          "mask_foreground_pixels": 141150,
+          "mask_sha256_row_major_uint8": "3d41cb5f405d575993fa4503102124071cae0b83eb57b68444bc72f27fc8cb22"
+        }
+      ],
+      "rejected_segmentation_predictions": [],
+      "raw_poses_above_model_threshold": [
+        {
+          "bbox": [
+            188.20298767089844,
+            101.27873229980469,
+            805.2054443359375,
+            510.5093078613281
+          ],
+          "confidence": 0.857107400894165,
+          "keypoints": [
+            [
+              472.24774169921875,
+              526.8714599609375,
+              0.9630905389785767
+            ],
+            [
+              370.95855712890625,
+              380.2736511230469,
+              0.9856401681900024
+            ],
+            [
+              596.0816650390625,
+              252.72442626953125,
+              0.9544304013252258
+            ]
+          ]
+        }
+      ],
+      "desktop_predict_pair_ms": 79.5828000009351
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+[
+  {
+    "file": "pump270.json",
+    "status": "EQUIPMENT_FOUND",
+    "valid": true
+  },
+  {
+    "file": "pump90.json",
+    "status": "EQUIPMENT_FOUND",
+    "valid": true
+  },
+  {
+    "file": "rust0.json",
+    "status": "DEFECT_CANDIDATE",
+    "valid": true
+  }
+]

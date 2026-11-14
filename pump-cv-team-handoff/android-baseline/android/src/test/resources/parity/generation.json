@@ -1,0 +1,53 @@
+{
+  "ort": "1.23.2",
+  "purpose": "Numerical parity only, not accuracy/performance evaluation",
+  "fixtures": [
+    {
+      "id": "pump90",
+      "source": "work/pump_real/seg/images/test/commons_03_00.jpg",
+      "rawSize": [
+        213,
+        319
+      ],
+      "rotation": 90,
+      "archiveBytes": 2380636,
+      "models": {
+        "pump-seg": 1,
+        "pump-pose": 1
+      },
+      "status": "EQUIPMENT_FOUND",
+      "zones": 2
+    },
+    {
+      "id": "pump270",
+      "source": "work/pump_real/seg/images/test/commons_07_00.jpg",
+      "rawSize": [
+        481,
+        641
+      ],
+      "rotation": 270,
+      "archiveBytes": 3031963,
+      "models": {
+        "pump-seg": 1,
+        "pump-pose": 1
+      },
+      "status": "EQUIPMENT_FOUND",
+      "zones": 3
+    },
+    {
+      "id": "rust0",
+      "source": "work/pump_holdout/6bd1015378aa4382aedc45fe4b7adda4.png",
+      "rawSize": [
+        315,
+        211
+      ],
+      "rotation": 0,
+      "archiveBytes": 2283263,
+      "models": {
+        "corrosion": 1
+      },
+      "status": "DEFECT_CANDIDATE",
+      "zones": 0
+    }
+  ]
+}

@@ -1,0 +1,374 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:pump-cv:result:1",
+  "title": "Pump CV result v1",
+  "$comment": "Application must also validate RLE sum, bbox order, quaternion norm, stamp freshness, mode/state consistency and referential equipment IDs.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "modelManifestVersion": {
+      "const": "pump-cv-1"
+    },
+    "mode": {
+      "enum": [
+        "OVERVIEW",
+        "DETAIL_RUST",
+        "DETAIL_UNSUPPORTED"
+      ]
+    },
+    "coordinateSpace": {
+      "const": "raw_image_normalized"
+    },
+    "stamp": {
+      "$ref": "#/$defs/stamp"
+    },
+    "geometry": {
+      "$ref": "#/$defs/geometry"
+    },
+    "equipment": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/equipment"
+      }
+    },
+    "zoneCandidates": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/zone"
+      }
+    },
+    "defects": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/defect"
+      }
+    },
+    "status": {
+      "enum": [
+        "EQUIPMENT_FOUND",
+        "EQUIPMENT_NOT_FOUND",
+        "DEFECT_CANDIDATE",
+        "NO_DEFECT_DETECTED",
+        "UNSUPPORTED_DETAIL",
+        "AMBIGUOUS"
+      ]
+    },
+    "timings": {
+      "$ref": "#/$defs/timings"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "modelManifestVersion",
+    "mode",
+    "coordinateSpace",
+    "stamp",
+    "geometry",
+    "equipment",
+    "zoneCandidates",
+    "defects",
+    "status",
+    "timings"
+  ],
+  "$defs": {
+    "stamp": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "geometryEpoch": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "inspectionEpoch": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "frameTimestampNs": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "acquiredElapsedNs": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "imageWidth": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "imageHeight": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "sessionId",
+        "geometryEpoch",
+        "inspectionEpoch",
+        "frameTimestampNs",
+        "acquiredElapsedNs",
+        "imageWidth",
+        "imageHeight"
+      ]
+    },
+    "bbox": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "point": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "mask": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "encoding": {
+          "const": "rle_row_major_zero_first"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "counts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "required": [
+        "encoding",
+        "width",
+        "height",
+        "counts"
+      ]
+    },
+    "geometry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "intrinsics": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "fx": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "fy": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "cx": {
+              "type": "number"
+            },
+            "cy": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "fx",
+            "fy",
+            "cx",
+            "cy"
+          ]
+        },
+        "cameraPose": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "tx": {
+              "type": "number"
+            },
+            "ty": {
+              "type": "number"
+            },
+            "tz": {
+              "type": "number"
+            },
+            "qx": {
+              "type": "number"
+            },
+            "qy": {
+              "type": "number"
+            },
+            "qz": {
+              "type": "number"
+            },
+            "qw": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "tx",
+            "ty",
+            "tz",
+            "qx",
+            "qy",
+            "qz",
+            "qw"
+          ]
+        },
+        "imageToView": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 6,
+          "maxItems": 6
+        },
+        "rotationCw": {
+          "enum": [
+            0,
+            90,
+            180,
+            270
+          ]
+        }
+      },
+      "required": [
+        "intrinsics",
+        "cameraPose",
+        "imageToView",
+        "rotationCw"
+      ]
+    },
+    "equipment": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "bbox": {
+          "$ref": "#/$defs/bbox"
+        },
+        "mask": {
+          "$ref": "#/$defs/mask"
+        }
+      },
+      "required": [
+        "id",
+        "confidence",
+        "bbox",
+        "mask"
+      ]
+    },
+    "zone": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "enum": [
+            "frame",
+            "casing",
+            "terminal_box"
+          ]
+        },
+        "point": {
+          "$ref": "#/$defs/point"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "equipmentId": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "point",
+        "confidence",
+        "equipmentId"
+      ]
+    },
+    "defect": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "const": "corrosion"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "bbox": {
+          "$ref": "#/$defs/bbox"
+        },
+        "mask": {
+          "$ref": "#/$defs/mask"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "confidence",
+        "bbox",
+        "mask"
+      ]
+    },
+    "timings": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "preprocessMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "inferenceMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "decodeMs": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "preprocessMs",
+        "inferenceMs",
+        "decodeMs"
+      ]
+    }
+  }
+}
