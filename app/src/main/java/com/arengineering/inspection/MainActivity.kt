@@ -3,17 +3,22 @@ package com.arengineering.inspection
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import com.google.ar.core.ArCoreApk
 import com.google.ar.core.Config
 import com.google.ar.core.Session
@@ -25,7 +30,8 @@ import com.google.ar.core.exceptions.UnavailableSdkTooOldException
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException
 
 class MainActivity : ComponentActivity() {
-    private lateinit var preview: ArPreview
+    private var preview by mutableStateOf<ArPreview?>(null)
+    private lateinit var controller: InspectionUiController
     private var issue by mutableStateOf<StartupIssue?>(null)
     private var session: Session? = null
     private var foreground = false
@@ -34,8 +40,8 @@ class MainActivity : ComponentActivity() {
 
     private val cameraPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) {
-            if (foreground) startAr()
-        } else {
+            startAr()
+        } else if (controller.state.value.account != null) {
             issue = if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
                 StartupIssue.PERMISSION
             } else {
@@ -46,26 +52,49 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+        )
         installRequested = savedInstanceState?.getBoolean("arInstallRequested") ?: false
-        ArCoreApk.getInstance().checkAvailabilityAsync(this) { /* Prefetch device support. */ }
+        controller = DemoInspectionController(this, lifecycleScope)
+        setContent {
+            val state by controller.state.collectAsState()
+            InspectionScreen(
+                state, preview, issue, onAction = controller::dispatch,
+                onStartupAction = ::handleStartupAction,
+            )
+        }
+        lifecycleScope.launch {
+            controller.state.collect { state ->
+                if (state.account == null) {
+                    closeSession()
+                    preview = null
+                    issue = null
+                } else {
+                    startArIfNeeded()
+                }
+            }
+        }
+    }
+
+    private fun startArIfNeeded() {
+        if (!foreground || controller.state.value.account == null || preview != null) return
         preview = ArPreview(this) {
             runOnUiThread {
-                if (!isDestroyed) {
+                if (!isDestroyed && controller.state.value.account != null) {
                     closeSession()
                     issue = StartupIssue.CAMERA_BUSY
                 }
             }
         }
-        setContent {
-            InspectionScreen(preview, issue, onStartupAction = ::handleStartupAction)
-        }
+        startAr()
     }
 
     override fun onResume() {
         super.onResume()
         foreground = true
-        startAr()
+        if (preview == null) startArIfNeeded() else startAr()
     }
 
     override fun onPause() {
@@ -85,7 +114,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun startAr() {
-        if (previewRunning) return
+        if (!foreground || controller.state.value.account == null || previewRunning) return
+        val arPreview = preview ?: return
         if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             if (issue != StartupIssue.PERMISSION_SETTINGS) issue = StartupIssue.PERMISSION
             return
@@ -103,7 +133,7 @@ class MainActivity : ComponentActivity() {
             }
             val current = checkNotNull(session)
             current.resume()
-            preview.start(current)
+            arPreview.start(current)
             previewRunning = true
             issue = null
         } catch (error: Exception) {
@@ -139,14 +169,14 @@ class MainActivity : ComponentActivity() {
 
     private fun pauseSession() {
         if (!previewRunning) return
-        preview.pause()
+        preview?.pause()
         session?.pause()
         previewRunning = false
     }
 
     private fun closeSession() {
         pauseSession()
-        preview.releaseSession()
+        preview?.releaseSession()
         session?.close()
         session = null
     }
