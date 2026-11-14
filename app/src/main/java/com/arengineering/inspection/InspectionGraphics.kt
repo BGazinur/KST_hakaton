@@ -11,6 +11,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -54,29 +55,8 @@ internal fun InspectionGraphics(
             return@Canvas
         }
 
-        if (overlay.pumpContour.size >= 3) {
-            val contour = Path()
-            overlay.pumpContour.forEachIndexed { index, point ->
-                val x = point.x * size.width
-                val y = point.y * size.height
-                if (index == 0) contour.moveTo(x, y) else contour.lineTo(x, y)
-            }
-            contour.close()
-            drawPath(contour, SkyBlue.copy(alpha = 0.12f))
-            drawPath(contour, SkyBlue, style = Stroke(2.dp.toPx()))
-        }
-        overlay.defectRegions.forEach { points ->
-            if (points.size < 3) return@forEach
-            val border = Path()
-            points.forEachIndexed { index, point ->
-                val x = point.x * size.width
-                val y = point.y * size.height
-                if (index == 0) border.moveTo(x, y) else border.lineTo(x, y)
-            }
-            border.close()
-            drawPath(border, Amber.copy(alpha = 0.16f))
-            drawPath(border, Amber, style = Stroke(2.dp.toPx()))
-        }
+        overlay.pumpMasks.forEach { drawRegion(it, SkyBlue) }
+        overlay.defectMasks.forEach { drawRegion(it, Amber) }
         overlay.marks.forEach { mark ->
             drawMarker(
                 Offset(mark.point.x * size.width, mark.point.y * size.height),
@@ -84,6 +64,18 @@ internal fun InspectionGraphics(
             )
         }
     }
+}
+
+private fun DrawScope.drawRegion(mask: ProjectedMask, color: Color) {
+    val path = Path().apply { fillType = PathFillType.EvenOdd }
+    mask.rings.forEach { points ->
+        val first = points.first()
+        path.moveTo(first.x * size.width, first.y * size.height)
+        for (point in points.drop(1)) path.lineTo(point.x * size.width, point.y * size.height)
+        path.close()
+    }
+    drawPath(path, color.copy(alpha = 0.22f))
+    drawPath(path, color, style = Stroke(2.dp.toPx()))
 }
 
 internal val HudStatus.canProject: Boolean

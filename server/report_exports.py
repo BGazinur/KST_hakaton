@@ -47,7 +47,7 @@ TELEMETRY_LABELS = {
 def report_sections(report):
     equipment = report["equipment_snapshot"]
     sample = report["telemetry_snapshot"] or {}
-    source = {"replay": "Воспроизведение", "live": "Датчики"}.get(sample.get("source"))
+    source = {"replay": "Воспроизведение", "live": "Внесённый замер"}.get(sample.get("source"))
     yield "Сведения", ("Поле", "Значение"), [
         ("Отчёт", f"№{report['id']}"),
         ("Оборудование", equipment["name"]),

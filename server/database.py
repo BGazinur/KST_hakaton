@@ -38,12 +38,12 @@ def initialize(path):
         db.execute("PRAGMA journal_mode = WAL")
         db.execute("BEGIN IMMEDIATE")
         version = db.execute("PRAGMA user_version").fetchone()[0]
-        if version == 4:
+        if version == 6:
             return
         if version == 0:
             execute_sql(db, ROOT / "schema.sql")
             seed(db)
-        elif version not in (1, 2, 3):
+        elif version not in (1, 2, 3, 4, 5):
             raise RuntimeError(f"Unsupported database schema version: {version}")
         if version == 1:
             execute_sql(db, ROOT / "migrations" / "002.sql")
@@ -51,9 +51,13 @@ def initialize(path):
             execute_sql(db, ROOT / "migrations" / "003.sql")
         if version in (1, 2, 3):
             execute_sql(db, ROOT / "migrations" / "004.sql")
+        if version != 0:
+            execute_sql(db, ROOT / "migrations" / "006.sql")
         if db.execute("SELECT 1 FROM equipment WHERE id = ? AND is_demo = 1", (DEMO_PUMP,)).fetchone():
             seed_cv(db)
-        db.execute("PRAGMA user_version = 4")
+            seed_visual_checks(db)
+            seed_visual_hints(db)
+        db.execute("PRAGMA user_version = 6")
 
 
 def execute_sql(db, path):
@@ -195,6 +199,71 @@ def seed_cv(db):
             "Зафиксируйте участок и передайте наблюдение для проверки по регламенту.",
             DEMO_PUMP,
         ),
+    )
+
+
+def seed_visual_checks(db):
+    motor_group = "Электродвигатели и электроприводы"
+    valve_group = "Запорная и регулирующая арматура (задвижки, клапаны, краны)"
+    targets = db.execute(
+        """
+        SELECT id, kind FROM equipment WHERE is_demo = 1 AND (
+            (parent_id = ? AND kind = 'motor') OR
+            id IN (SELECT members.equipment_id FROM line_equipment pump
+                   JOIN line_equipment members ON members.line_id = pump.line_id
+                   WHERE pump.equipment_id = ? AND members.equipment_id != pump.equipment_id)
+        ) ORDER BY id
+        """,
+        (DEMO_PUMP, DEMO_PUMP),
+    ).fetchall()
+    for target in targets:
+        kind = target["kind"]
+        if kind == "motor":
+            equipment_id, component_id, group = DEMO_PUMP, target["id"], motor_group
+            instruction = "Наведите камеру на электродвигатель. Сравните видимый участок с признаками ниже."
+        elif kind in ("gate_valve", "check_valve"):
+            equipment_id, component_id, group = target["id"], None, valve_group
+            instruction = "Наведите камеру на арматуру. Сравните видимый участок с признаками ниже."
+        else:
+            continue
+        db.execute(
+            """
+            INSERT INTO inspection_checks (
+                equipment_id, component_id, defect_type_id, position, title,
+                instructions, acceptance_criteria, recommendation
+            )
+            SELECT ?, ?, d.id, base.position + ROW_NUMBER() OVER (ORDER BY d.id),
+                   d.name, ?, d.visible_signs, ?
+            FROM defect_types d
+            CROSS JOIN (SELECT COALESCE(MAX(position), 0) AS position
+                        FROM inspection_checks WHERE equipment_id = ?) base
+            WHERE d.equipment_group = ?
+              AND (? != 'check_valve' OR d.name = 'Коррозия фланцевых соединений')
+              AND NOT EXISTS (SELECT 1 FROM inspection_checks c WHERE c.equipment_id = ?
+                              AND c.component_id IS ? AND c.defect_type_id = d.id)
+            ORDER BY d.id
+            """,
+            (equipment_id, component_id, instruction,
+             "Зафиксируйте наблюдение и передайте его ответственному за обслуживание.",
+             equipment_id, group, kind, equipment_id, component_id),
+        )
+
+
+def seed_visual_hints(db):
+    by_title = (
+        ("shaft_leak", "Возможная утечка в зоне вала"),
+        ("coupling_guard", "Защитный кожух муфты"),
+        ("motor_cable", "Повреждение изоляции кабелей"),
+        ("motor_fins", "Деформация ребер охлаждения"),
+        ("motor_ground", "Отсутствие заземления"),
+        ("motor_discoloration", "Следы перегрева (побежалость)"),
+    )
+    db.executemany(
+        """
+        UPDATE inspection_checks SET visual_hint = ?
+        WHERE title = ? AND equipment_id = ? AND visual_model IS NULL AND visual_hint IS NULL
+        """,
+        [(hint, title, DEMO_PUMP) for hint, title in by_title],
     )
 
 

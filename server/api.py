@@ -3,20 +3,24 @@ import json
 from contextlib import asynccontextmanager, suppress
 from datetime import date
 from itertools import cycle
+from pathlib import Path
 from typing import Annotated, Literal
 from urllib.parse import quote
 
 from email_validator import EmailNotValidError
-from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, Request, Response, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Query, Request, Response, UploadFile
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, SecretStr
 
-from .auth import SESSION_SECONDS, authenticate, normalize_email, session_user, token_hash
-from .database import DEMO_PUMP, connect, db_path, initialize, set_current, utc_now
+from .admin import require_equipment, router as admin_router
+from .auth import SESSION_SECONDS, authenticate, normalize_email, token_hash
+from .database import DEMO_PUMP, connect, current_telemetry, db_path, initialize, set_current, utc_now
+from .http_auth import Credentials, User, unauthorized
 from .passport import decode, get_passport, rows, sensor_status
 from .report_exports import EXPORT_TYPES, make_pdf, make_xlsx
+from .vision_review import VisionBusy, VisionFrame, VisionReview, VisionUnavailable, inspect_frame
 
 
 def replay_ids(path):
@@ -34,7 +38,10 @@ def replay_ids(path):
 
 def update_sample(path, sample_id):
     with connect(path) as db:
-        set_current(db, DEMO_PUMP, sample_id)
+        db.execute("BEGIN IMMEDIATE")
+        current = current_telemetry(db, DEMO_PUMP)
+        if current is None or current["source"] == "replay":
+            set_current(db, DEMO_PUMP, sample_id)
 
 
 async def replay(path, sample_ids):
@@ -61,25 +68,23 @@ async def lifespan(app):
 
 
 app = FastAPI(title="AR Engineering", lifespan=lifespan)
-bearer = HTTPBearer(auto_error=False)
-Credentials = Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)]
+app.include_router(admin_router)
+web = Path(__file__).resolve().parent / "web"
+app.mount("/panel/assets", StaticFiles(directory=web), name="panel-assets")
 
 
-def unauthorized():
-    return HTTPException(401, "Неверные данные входа или сессия истекла.", headers={"WWW-Authenticate": "Bearer"})
+@app.get("/", include_in_schema=False)
+def home():
+    return RedirectResponse("/panel")
 
 
-def authenticated_user(request: Request, credentials: Credentials):
-    if not credentials:
-        raise unauthorized()
-    with connect(request.app.state.db_path) as db:
-        user = session_user(db, credentials.credentials)
-    if user is None:
-        raise unauthorized()
-    return user
-
-
-User = Annotated[dict, Depends(authenticated_user)]
+@app.get("/panel", include_in_schema=False)
+def panel():
+    return FileResponse(web / "index.html", headers={
+        "Content-Security-Policy": "default-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",
+        "X-Content-Type-Options": "nosniff",
+        "Referrer-Policy": "no-referrer",
+    })
 
 
 class Login(BaseModel):
@@ -184,6 +189,23 @@ def passport(equipment_id: int, request: Request, user: User):
     return result
 
 
+@app.get("/equipment/{equipment_id}/samples")
+def sample_history(
+    equipment_id: int, request: Request, user: User,
+    limit: Annotated[int, Query(ge=1, le=100)] = 25,
+):
+    with connect(request.app.state.db_path) as db:
+        require_equipment(db, equipment_id)
+        return rows(
+            db,
+            """
+            SELECT * FROM telemetry_samples WHERE equipment_id = ? AND source = 'live'
+            ORDER BY measured_at DESC, id DESC LIMIT ?
+            """,
+            (equipment_id, limit),
+        )
+
+
 @app.get("/documents/{document_id}")
 def document(document_id: int, request: Request, user: User):
     with connect(request.app.state.db_path) as db:
@@ -191,6 +213,25 @@ def document(document_id: int, request: Request, user: User):
     if row is None:
         raise HTTPException(404, "Документ не найден.")
     return download(row["content"], row["filename"], row["content_type"])
+
+
+@app.post("/equipment/{equipment_id}/checks/{check_id}/vision-review", response_model=VisionReview)
+def vision_review(equipment_id: int, check_id: int, frame: VisionFrame, request: Request, user: User):
+    with connect(request.app.state.db_path) as db:
+        check = db.execute(
+            "SELECT title, acceptance_criteria FROM inspection_checks WHERE id = ? AND equipment_id = ?",
+            (check_id, equipment_id),
+        ).fetchone()
+    if check is None:
+        raise HTTPException(404, "В паспорте оборудования нет такого шага.")
+    try:
+        return inspect_frame(frame, check)
+    except ValueError as error:
+        raise HTTPException(422, str(error)) from error
+    except VisionBusy as error:
+        raise HTTPException(429, "Локальная модель проверяет другой кадр. Попробуйте ещё раз.") from error
+    except VisionUnavailable as error:
+        raise HTTPException(503, "Локальная модель недоступна. Можно продолжить осмотр вручную.") from error
 
 
 def download(content, filename, content_type):
@@ -210,6 +251,33 @@ def read_upload(file, limit, signatures):
             filename = (file.filename or "document").replace("\\", "/").rsplit("/", 1)[-1].strip()
             return filename[:255] or "document", content_type, content
     raise HTTPException(422, "Формат файла не поддерживается.")
+
+
+@app.post("/equipment/{equipment_id}/documents", status_code=201)
+def add_document(
+    equipment_id: int,
+    request: Request,
+    user: User,
+    kind: Annotated[Literal["passport", "manual", "operating_map", "maintenance_regulation"], Form()],
+    title: Annotated[str, Form(min_length=1, max_length=254)],
+    file: Annotated[UploadFile, File()],
+    revision: Annotated[str | None, Form(max_length=100)] = None,
+):
+    if user["role"] != "admin":
+        raise HTTPException(403, "Добавлять документы может администратор.")
+    if not title.strip():
+        raise HTTPException(422, "Укажите название документа.")
+    upload = read_upload(file, 10 * 1024 * 1024, ((b"%PDF-", "application/pdf"),))
+    with connect(request.app.state.db_path) as db:
+        require_equipment(db, equipment_id)
+        document_id = db.execute(
+            """
+            INSERT INTO documents (equipment_id, kind, title, revision, filename, content_type, content)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (equipment_id, kind, title.strip(), (revision or "").strip() or None, *upload),
+        ).lastrowid
+    return {"id": document_id}
 
 
 @app.post("/equipment/{equipment_id}/verifications", status_code=201)

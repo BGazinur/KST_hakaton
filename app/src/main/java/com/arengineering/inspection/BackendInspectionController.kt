@@ -1,13 +1,16 @@
 package com.arengineering.inspection
 
 import android.content.res.Resources
+import android.util.Base64
 import androidx.annotation.StringRes
 import com.arengineering.inspection.cv.EquipmentLookupRequest
 import com.arengineering.inspection.cv.CodeSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONException
@@ -27,9 +30,33 @@ internal class BackendInspectionController(
     private val api = TerminalServer()
     private val model = MutableStateFlow(InspectionUiState())
     private var operation: Job? = null
+    private var historyLoad: Job? = null
+    private var liveUpdates: Job? = null
+    private var liveUpdatesEnabled = false
     private var passport: JSONObject? = null
+    private var selectedCheckIds: Set<String> = emptySet()
     private val results = mutableListOf<StepResult>()
     override val state = model.asStateFlow()
+
+    fun terminalConnection() = api.copyConnection()
+
+    suspend fun reportPdf(id: Long): ByteArray = api.reportPdf(id)
+
+    suspend fun reviewFrame(stepId: String, photo: ReviewPhoto): JSONObject {
+        val current = model.value
+        val equipment = checkNotNull(current.equipment).equipment.id.toLong()
+        val stage = current.stage as? InspectionStage.InspectNode
+        check(stage?.step?.id == stepId && stage.result == null)
+        val body = JSONObject().put("jpeg_base64", Base64.encodeToString(photo.jpeg, Base64.NO_WRAP))
+            .put("scope", if (photo.candidate) "candidate" else "frame")
+        return JSONObject(api.reviewFrame(equipment, stepId.toLong(), body).requireSuccess())
+    }
+
+    fun enableLiveUpdates(enabled: Boolean) {
+        if (enabled == liveUpdatesEnabled) return
+        liveUpdatesEnabled = enabled
+        refreshEquipment()
+    }
 
     fun onEquipmentCode(code: EquipmentLookupRequest) {
         val current = model.value
@@ -71,17 +98,32 @@ internal class BackendInspectionController(
             InspectionAction.StartInspection -> if (stage is InspectionStage.EquipmentPreview ||
                 stage is InspectionStage.AnalysisReady && stage.error != null
             ) analyze()
+            is InspectionAction.SelectChecks -> if (stage is InspectionStage.AnalysisReady && stage.error == null) {
+                val selection = stage.checks.map { it.id }.filter { it in action.ids }.toSet()
+                if (selection.isNotEmpty()) model.value = current.copy(stage = stage.copy(selectedCheckIds = selection))
+            }
             InspectionAction.ContinueInspection -> if (stage is InspectionStage.AnalysisReady && stage.error == null) {
+                selectedCheckIds = stage.selectedCheckIds
                 if (passport?.optJSONObject("equipment")?.optString("kind") == "centrifugal_pump") {
                     model.value = current.copy(stage = InspectionStage.FindPump)
                 } else showStep(0)
             }
             InspectionAction.ConfirmPump -> if (stage is InspectionStage.FindPump) showStep(0)
+            is InspectionAction.SetAgentHint -> if (stage is InspectionStage.InspectNode &&
+                stage.result == null && stage.agentHint != null && !stage.scanCorrosion
+            ) model.value = current.copy(stage = stage.copy(agentHintEnabled = action.enabled))
+            is InspectionAction.AcceptVisionObservation -> if (stage is InspectionStage.InspectNode &&
+                stage.step.id == action.stepId && stage.result == null && action.observation.isNotBlank()
+            ) {
+                model.value = current.copy(stage = stage.copy(visionObservation = action.observation.take(220)))
+            }
             is InspectionAction.RecordNode -> if (stage is InspectionStage.InspectNode &&
                 stage.result == null && stage.step.id == action.stepId && action.outcome != StepOutcome.SKIPPED
             ) {
                 val recorded = stepResult(stage.step, action.outcome)
-                val result = recorded.copy(findings = recorded.findings.map {
+                val result = recorded.copy(observation = stage.visionObservation?.let {
+                    strings.getString(R.string.vision_review_report_note, it)
+                }, findings = recorded.findings.map {
                     it.copy(confidence = stage.corrosionConfidence)
                 })
                 model.value = current.copy(
@@ -134,9 +176,12 @@ internal class BackendInspectionController(
 
     private fun signOut() {
         operation?.cancel()
+        liveUpdates?.cancel()
+        historyLoad?.cancel()
         val address = model.value.serverAddress
         model.value = InspectionUiState(signingIn = true, serverAddress = address)
         passport = null
+        selectedCheckIds = emptySet()
         results.clear()
         operation = scope.launch {
             try {
@@ -152,7 +197,10 @@ internal class BackendInspectionController(
 
     private fun resetInspection() {
         operation?.cancel()
+        liveUpdates?.cancel()
+        historyLoad?.cancel()
         passport = null
+        selectedCheckIds = emptySet()
         results.clear()
         model.value = InspectionUiState(account = model.value.account, serverAddress = model.value.serverAddress)
     }
@@ -174,13 +222,67 @@ internal class BackendInspectionController(
 
     private suspend fun loadEquipment(id: Long) {
         val snapshot = JSONObject(api.passport(id, checksOnly = false).requireSuccess())
-        val history = JSONArray(api.history(id).requireSuccess()).objects().map {
-            historyReport(JSONObject(api.report(it.getLong("id")).requireSuccess()))
-        }
+        val card = equipmentCard(snapshot)
         passport = snapshot
         model.value = model.value.copy(
-            stage = InspectionStage.EquipmentPreview, equipment = equipmentCard(snapshot), history = history,
+            stage = InspectionStage.EquipmentPreview, equipment = card, findings = card.alerts,
         )
+        refreshEquipment()
+        historyLoad?.cancel()
+        historyLoad = scope.launch {
+            try {
+                val history = JSONArray(api.history(id).requireSuccess()).objects().map {
+                    historyReport(JSONObject(api.report(it.getLong("id")).requireSuccess()))
+                }
+                val current = model.value
+                model.value = current.copy(history = (current.history + history).distinctBy { it.id }.take(20))
+            } catch (_: BackendError) {
+                // The live passport handles session expiry separately.
+            } catch (_: IOException) {
+                // History is loaded again when the equipment is selected again.
+            } catch (_: JSONException) {
+                // Preserve the successfully loaded passport if a report has an invalid payload.
+            }
+        }
+    }
+
+    private fun refreshEquipment() {
+        liveUpdates?.cancel()
+        val id = model.value.equipment?.equipment?.id?.toLong() ?: return
+        if (!liveUpdatesEnabled) return
+        liveUpdates = scope.launch {
+            while (isActive) {
+                try {
+                    val snapshot = JSONObject(api.passport(id, checksOnly = false).requireSuccess())
+                    val card = equipmentCard(snapshot)
+                    val current = model.value
+                    val analysisStarted = current.stage != InspectionStage.EquipmentPreview
+                    model.value = current.copy(equipment = card, findings = if (analysisStarted) current.findings else card.alerts)
+                } catch (error: BackendError) {
+                    if (error.status == 401) {
+                        expireSession()
+                        return@launch
+                    }
+                    markRefreshFailed()
+                } catch (_: IOException) {
+                    markRefreshFailed()
+                } catch (_: JSONException) {
+                    markRefreshFailed()
+                }
+                delay(1_000)
+            }
+        }
+    }
+
+    private fun markRefreshFailed() {
+        val current = model.value
+        model.value = current.copy(equipment = current.equipment?.copy(refreshFailed = true))
+    }
+
+    private fun expireSession() {
+        api.disconnect()
+        resetInspection()
+        model.value = model.value.copy(account = null, signInError = text(R.string.inspection_session_expired))
     }
 
     private fun analyze() {
@@ -188,13 +290,15 @@ internal class BackendInspectionController(
         model.value = model.value.copy(stage = InspectionStage.Analyzing, findings = emptyList())
         request(onError = { model.value = model.value.copy(stage = InspectionStage.AnalysisReady(error = it)) }) {
             val snapshot = JSONObject(api.passport(id, checksOnly = false).requireSuccess())
+            val card = equipmentCard(snapshot)
             passport = snapshot
             results.clear()
-            val error = if (snapshot.getJSONArray("checks").length() == 0) text(R.string.inspection_no_checks) else null
+            val error = if (card.checks.isEmpty()) text(R.string.inspection_no_checks) else null
             model.value = model.value.copy(
-                equipment = equipmentCard(snapshot), findings = findings(snapshot),
+                equipment = card, findings = card.alerts,
                 stage = InspectionStage.AnalysisReady(
                     missingData = snapshot.isNull("telemetry"), error = error,
+                    checks = card.checks, selectedCheckIds = card.checks.map { it.id }.toSet(),
                 ),
             )
         }
@@ -203,19 +307,18 @@ internal class BackendInspectionController(
     private fun showStep(index: Int) {
         val snapshot = checkNotNull(passport)
         val current = model.value
-        val steps = snapshot.getJSONArray("checks")
-        val next = steps.optJSONObject(index)
+        val steps = snapshot.getJSONArray("checks").objects().filter { it.getString("id") in selectedCheckIds }
+        val next = steps.getOrNull(index)
         model.value = current.copy(stage = if (next != null) {
             InspectionStage.InspectNode(
-                step(next), index + 1, steps.length(), guidance = next.string("acceptance_criteria"),
-                scanCorrosion = next.string("visual_model") == "corrosion",
+                step(next), index + 1, steps.size, guidance = next.string("acceptance_criteria"),
             )
         } else {
             val card = checkNotNull(current.equipment)
             InspectionStage.Summary(
                 InspectionReport(
                     UUID.randomUUID().toString(), card.equipment, System.currentTimeMillis(),
-                    results.toList(), current.findings, card.telemetry,
+                    results.toList(), current.findings, telemetry(snapshot.getJSONArray("sensors")),
                 ),
             )
         })
@@ -229,9 +332,10 @@ internal class BackendInspectionController(
             report.results.forEach { result ->
                 val item = JSONObject().put("check_id", result.step.id.toLong()).put("outcome", result.outcome.apiValue)
                 val confidence = result.findings.firstOrNull()?.confidence
-                if (confidence != null) {
-                    item.put("observation", strings.getString(R.string.cv_corrosion_candidate, formatConfidence(confidence)))
-                }
+                val observation = listOfNotNull(result.observation, confidence?.let {
+                    strings.getString(R.string.cv_corrosion_candidate, formatConfidence(it))
+                }).joinToString("\n")
+                if (observation.isNotEmpty()) item.put("observation", observation)
                 items.put(item)
             }
             val payload = JSONObject().put("equipment_id", report.equipment.id.toLong())
@@ -257,9 +361,7 @@ internal class BackendInspectionController(
                     if (login) text(R.string.inspection_bad_login) else text(R.string.inspection_session_expired)
                 } else e.message ?: text(R.string.inspection_server_error)
                 if (e.status == 401 && !login) {
-                    api.disconnect()
-                    resetInspection()
-                    model.value = model.value.copy(account = null, signInError = message)
+                    expireSession()
                 } else onError(message)
             } catch (_: IOException) {
                 onError(text(R.string.telemetry_server_unreachable))
@@ -269,19 +371,83 @@ internal class BackendInspectionController(
         }
     }
 
-    private fun equipmentRef(value: JSONObject) = EquipmentRef(
-        value.getLong("id").toString(), value.getString("name"),
-        value.string("serial_number") ?: value.getString("asset_tag"),
-    )
+    private fun equipmentRef(value: JSONObject): EquipmentRef {
+        val serialNumber = value.string("serial_number")
+        return EquipmentRef(
+            value.getLong("id").toString(), value.getString("name"),
+            serialNumber ?: value.getString("asset_tag"), value.optString("kind"), hasSerialNumber = serialNumber != null,
+        )
+    }
 
     private fun equipmentCard(value: JSONObject) = EquipmentCard(
         equipmentRef(value.getJSONObject("equipment")),
         specifications = equipmentFields(value.getJSONObject("equipment")),
-        telemetry = telemetry(value.getJSONArray("sensors")),
         components = value.getJSONArray("components").objects().map {
             ComponentCard(it.getLong("id").toString(), it.getString("name"), equipmentFields(it))
         },
+        readings = value.getJSONArray("sensors").objects().map(::passportReading).sortedBy { reading ->
+            when (reading.code) {
+                "overall_rms_mm_s" -> 0
+                "pump_bearing_c" -> 1
+                "motor_winding_c" -> 2
+                "speed_rpm" -> 3
+                else -> 4
+            }
+        },
+        sampleUpdatedAt = value.optJSONObject("telemetry")?.string("updated_at")?.let(::parseServerTime),
+        replay = value.optJSONObject("telemetry")?.optString("source") == "replay",
+        alerts = findings(value),
+        operation = operationFields(value),
+        checks = value.getJSONArray("checks").objects().map(::step),
     )
+
+    private fun operationFields(value: JSONObject): List<InspectionField> = buildList {
+        value.optJSONObject("operating_state")?.let { state ->
+            val status = when (state.optString("state")) {
+                "running" -> R.string.equipment_running
+                "stopped" -> R.string.equipment_stopped
+                else -> R.string.equipment_state_unknown
+            }
+            add(field(R.string.equipment_operating_state, text(status)))
+            state.string("run_hours")?.let { add(field(R.string.equipment_run_hours, it)) }
+        }
+        value.getJSONArray("maintenance").objects().forEach { plan ->
+            val remaining = listOfNotNull(
+                plan.string("remaining_days")?.let { strings.getString(R.string.equipment_due_days, it) },
+                plan.string("remaining_hours")?.let { strings.getString(R.string.equipment_due_hours, it) },
+            )
+            val status = plan.string("message") ?: when (plan.optString("status")) {
+                "due" -> text(R.string.equipment_due)
+                "due_soon" -> text(R.string.equipment_due_soon)
+                "scheduled" -> text(R.string.equipment_scheduled)
+                else -> text(R.string.equipment_state_unknown)
+            }
+            add(InspectionField(plan.getString("name"), (listOf(status) + remaining).joinToString(" · ")))
+        }
+    }
+
+    private fun passportReading(sensor: JSONObject): PassportReading {
+        val unit = sensor.getString("unit")
+        fun measurement(key: String): String? = (sensor.opt(key) as? Number)?.let {
+            "${NumberFormat.getNumberInstance(RUSSIAN_LOCALE).format(it)} $unit"
+        }
+        val reading = measurement("reading")
+        val status = when {
+            reading == null -> ReadingStatus.MISSING
+            else -> when (sensor.getString("status")) {
+                "alarm" -> ReadingStatus.ALARM
+                "warning" -> ReadingStatus.WARNING
+                "normal" -> ReadingStatus.NORMAL
+                else -> ReadingStatus.UNCLASSIFIED
+            }
+        }
+        val limits = listOfNotNull(
+            measurement("nominal_value")?.let { field(R.string.equipment_nominal, it) },
+            measurement("warning_above")?.let { field(R.string.inspection_threshold, "> $it") },
+            measurement("alarm_above")?.let { field(R.string.inspection_alarm, "> $it") },
+        )
+        return PassportReading(sensor.getString("code"), sensor.getString("label"), reading, status, limits)
+    }
 
     private fun equipmentFields(value: JSONObject): List<InspectionField> = buildList {
         value.string("asset_tag")?.let { add(field(R.string.inspection_asset_tag, it)) }
@@ -323,6 +489,8 @@ internal class BackendInspectionController(
 
     private fun step(check: JSONObject) = InspectionStep(
         check.getLong("id").toString(), check.getString("title"), check.getString("instructions"),
+        check.string("visual_model"),
+        check.string("visual_hint"),
     )
 
     private fun stepResult(step: InspectionStep, outcome: StepOutcome, check: JSONObject? = findCheck(step.id)): StepResult {
@@ -341,11 +509,9 @@ internal class BackendInspectionController(
         val results = value.getJSONArray("items").objects().map { item ->
             val check = item.getJSONObject("check_snapshot")
             val result = stepResult(step(check), StepOutcome.entries.first { it.apiValue == item.getString("outcome") }, check)
-            result.copy(findings = result.findings.map { it.copy(visualObservation = item.string("observation")) })
+            result.copy(observation = item.string("observation"))
         }
-        val time = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ROOT).apply {
-            timeZone = TimeZone.getTimeZone("UTC")
-        }.parse(value.getString("created_at").take(19), ParsePosition(0))?.time ?: 0L
+        val time = parseServerTime(value.getString("created_at")) ?: 0L
         return InspectionReport(
             value.getLong("id").toString(), equipmentRef(value.getJSONObject("equipment_snapshot")),
             time, results, results.flatMap { it.findings }, telemetry(value.getJSONArray("sensors_snapshot")),
@@ -356,6 +522,12 @@ internal class BackendInspectionController(
     private fun field(@StringRes res: Int, value: String) = InspectionField(text(res), value)
     private fun text(@StringRes res: Int) = strings.getString(res)
 }
+
+private val RUSSIAN_LOCALE = Locale.forLanguageTag("ru-RU")
+
+private fun parseServerTime(value: String): Long? = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ROOT).apply {
+    timeZone = TimeZone.getTimeZone("UTC")
+}.parse(value.take(19), ParsePosition(0))?.time
 
 private fun JSONObject.string(key: String) = if (isNull(key)) null else getString(key).takeIf { it.isNotBlank() }
 private fun JSONArray.objects() = (0 until length()).map(::getJSONObject)

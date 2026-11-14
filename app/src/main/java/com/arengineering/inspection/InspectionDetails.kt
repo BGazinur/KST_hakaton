@@ -1,9 +1,12 @@
 package com.arengineering.inspection
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
@@ -26,14 +29,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import java.text.DateFormat
 import java.text.NumberFormat
 import java.util.Date
+import java.util.Locale
 
 internal enum class InspectionSection(val label: Int) {
     EQUIPMENT(R.string.equipment_card),
@@ -85,28 +93,46 @@ internal fun InspectionSectionDialog(
     section: InspectionSection,
     state: InspectionUiState,
     onAction: (InspectionAction) -> Unit,
+    onExportPdf: (String) -> Unit,
     onClose: () -> Unit,
 ) {
-    Dialog(onDismissRequest = onClose) {
-        Surface(color = Night, shape = PanelShape) {
+    InspectionDialog(title = stringResource(section.label), onClose = onClose) {
+        when (section) {
+            InspectionSection.EQUIPMENT -> EquipmentDetails(state.equipment)
+            InspectionSection.FINDINGS -> FindingList(
+                if (state.isDemo) state.findings else state.equipment?.alerts.orEmpty() +
+                    state.findings.filter { it.source == FindingSource.VISUAL },
+            )
+            InspectionSection.HISTORY -> HistoryDetails(state.history, onExportPdf.takeUnless { state.isDemo })
+            InspectionSection.ACCOUNT -> AccountContent(state, onAction)
+        }
+    }
+}
+
+@Composable
+internal fun InspectionDialog(
+    title: String,
+    onClose: () -> Unit,
+    closeLabel: Int = R.string.close,
+    content: @Composable () -> Unit,
+) {
+    Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Surface(
+            modifier = Modifier.widthIn(max = 560.dp).fillMaxWidth().padding(horizontal = 12.dp, vertical = 16.dp),
+            color = Night,
+            shape = PanelShape,
+        ) {
             Column(
-                Modifier.fillMaxWidth().padding(20.dp),
+                Modifier.fillMaxWidth().padding(start = 16.dp, top = 20.dp, end = 16.dp, bottom = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Text(stringResource(section.label), style = MaterialTheme.typography.headlineSmall, color = SkyBlue)
+                Text(title, style = MaterialTheme.typography.headlineSmall, color = SkyBlue)
                 Column(
-                    Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    when (section) {
-                        InspectionSection.EQUIPMENT -> EquipmentDetails(state.equipment)
-                        InspectionSection.FINDINGS -> FindingList(state.findings)
-                        InspectionSection.HISTORY -> HistoryDetails(state.history)
-                        InspectionSection.ACCOUNT -> AccountContent(state, onAction)
-                    }
-                }
-                TextButton(onClick = onClose, modifier = Modifier.align(Alignment.End)) {
-                    Text(stringResource(R.string.close))
+                    Modifier.weight(1f, fill = false).fillMaxWidth().verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) { content() }
+                TextButton(onClick = onClose, modifier = Modifier.align(Alignment.End).heightIn(min = 48.dp)) {
+                    Text(stringResource(closeLabel))
                 }
             }
         }
@@ -173,26 +199,122 @@ private fun EquipmentDetails(card: EquipmentCard?) {
         return
     }
     PanelTitle(card.equipment.name)
-    PanelText(stringResource(R.string.serial_number_value, card.equipment.serialNumber))
-    if (card.specifications.isNotEmpty()) {
-        PanelTitle(stringResource(R.string.equipment_specs))
-        FieldList(card.specifications)
+    EquipmentIdentifier(card.equipment)
+    if (card.refreshFailed) {
+        PanelText(stringResource(R.string.equipment_refresh_failed), Amber)
     }
-    if (card.telemetry.isNotEmpty()) {
-        PanelTitle(stringResource(R.string.equipment_telemetry))
+    if (card.readings.isNotEmpty() || card.telemetry.isNotEmpty()) {
+        PanelTitle(stringResource(R.string.equipment_live_readings))
+        card.sampleUpdatedAt?.let {
+            val time = DateFormat.getTimeInstance(DateFormat.MEDIUM, Locale.forLanguageTag("ru-RU")).format(Date(it))
+            PanelText(stringResource(if (card.replay) R.string.equipment_updated_replay else R.string.equipment_updated, time))
+        }
+        card.readings.groupBy { it.group }.forEach { (group, readings) ->
+            Text(stringResource(group), color = SkyBlue, style = MaterialTheme.typography.titleSmall)
+            Column(Modifier.fillMaxWidth().hudPanel()) {
+                readings.forEachIndexed { index, reading ->
+                    ReadingRow(reading)
+                    if (index < readings.lastIndex) HorizontalDivider(Modifier.padding(horizontal = 12.dp))
+                }
+            }
+        }
         FieldList(card.telemetry)
+    } else {
+        PanelText(stringResource(R.string.equipment_no_telemetry))
+    }
+    if (card.alerts.isNotEmpty()) {
+        PanelTitle(stringResource(R.string.equipment_alerts))
+        FindingList(card.alerts)
+    }
+    if (card.operation.isNotEmpty()) {
+        ExpandableRow("operation", stringResource(R.string.equipment_operation)) { FieldList(card.operation) }
+    }
+    if (card.specifications.isNotEmpty()) {
+        ExpandableRow("specifications", stringResource(R.string.equipment_specs)) { FieldList(card.specifications) }
     }
     if (card.components.isNotEmpty()) {
-        PanelTitle(stringResource(R.string.equipment_components))
-        card.components.forEach { component ->
-            ExpandableRow(component.id, component.name) {
-                if (component.fields.isEmpty()) PanelText(stringResource(R.string.no_component_details))
-                FieldList(component.fields)
+        ExpandableRow("components", stringResource(R.string.equipment_components)) {
+            card.components.forEach { component ->
+                ExpandableRow(component.id, component.name) {
+                    if (component.fields.isEmpty()) PanelText(stringResource(R.string.no_component_details))
+                    FieldList(component.fields)
+                }
             }
         }
     }
-    PanelTitle(stringResource(R.string.previous_findings))
-    FindingList(card.previousFindings)
+    if (card.checks.isNotEmpty()) {
+        ExpandableRow("inspection-checks", stringResource(R.string.equipment_checklist, card.checks.size)) {
+            card.checks.forEach { step ->
+                PanelText(stringResource(R.string.field_value, step.component, stringResource(step.inspectionMethod)))
+            }
+        }
+    }
+    if (card.previousFindings.isNotEmpty()) {
+        PanelTitle(stringResource(R.string.previous_findings))
+        FindingList(card.previousFindings)
+    }
+}
+
+private val PassportReading.group: Int
+    get() = when (code) {
+        "overall_rms_mm_s", "amplitude_1x_mm_s", "amplitude_2x_mm_s", "hf_noise_g" -> R.string.equipment_vibration
+        "pump_bearing_c", "motor_winding_c" -> R.string.equipment_temperature
+        else -> R.string.equipment_other_readings
+    }
+
+@Composable
+private fun ReadingRow(reading: PassportReading) {
+    key(reading.code) {
+        var expanded by rememberSaveable { mutableStateOf(false) }
+        val hasLimits = reading.limits.isNotEmpty()
+        val title = if (hasLimits) {
+            stringResource(if (expanded) R.string.expanded_row else R.string.collapsed_row, reading.label)
+        } else reading.label
+        val readingValue = reading.value ?: stringResource(R.string.equipment_reading_missing)
+        val status = readingStatus(reading.status)
+        val contentColor = if (reading.status.hasAlert) Amber else Muted
+        val gesture = if (hasLimits) Modifier.clickable(role = Role.Button) { expanded = !expanded } else Modifier
+        Row(
+            Modifier.fillMaxWidth().then(gesture).heightIn(min = 52.dp).padding(horizontal = 12.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(title, modifier = Modifier.weight(0.64f), style = MaterialTheme.typography.bodyMedium)
+            Column(Modifier.weight(0.36f), horizontalAlignment = Alignment.End) {
+                Text(
+                    readingValue, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.End,
+                )
+                status?.let {
+                    Text(it, style = MaterialTheme.typography.labelMedium, color = contentColor, textAlign = TextAlign.End)
+                }
+            }
+        }
+        if (hasLimits && expanded) {
+            Column(Modifier.padding(start = 12.dp, end = 12.dp, bottom = 10.dp)) { FieldList(reading.limits) }
+        }
+    }
+}
+
+@Composable
+internal fun EquipmentIdentifier(equipment: EquipmentRef) {
+    val label = if (equipment.hasSerialNumber) R.string.serial_number_value else R.string.inventory_number_value
+    PanelText(stringResource(label, equipment.serialNumber))
+}
+
+internal val InspectionStep.inspectionMethod: Int
+    get() = if (visualModel == "corrosion") R.string.inspection_with_agent else R.string.inspection_manual
+
+private val ReadingStatus.hasAlert: Boolean
+    get() = this == ReadingStatus.WARNING || this == ReadingStatus.ALARM
+
+@Composable
+private fun readingStatus(status: ReadingStatus): String? = when (status) {
+    ReadingStatus.NORMAL -> stringResource(R.string.equipment_reading_normal)
+    ReadingStatus.WARNING -> stringResource(R.string.equipment_reading_warning)
+    ReadingStatus.ALARM -> stringResource(R.string.equipment_reading_alarm)
+    ReadingStatus.UNCLASSIFIED -> stringResource(R.string.equipment_reading_no_limits)
+    ReadingStatus.MISSING -> null
 }
 
 @Composable
@@ -219,15 +341,19 @@ private fun FindingList(findings: List<InspectionFinding>) {
 }
 
 @Composable
-private fun HistoryDetails(reports: List<InspectionReport>) {
+private fun HistoryDetails(reports: List<InspectionReport>, onExportPdf: ((String) -> Unit)?) {
     if (reports.isEmpty()) PanelText(stringResource(R.string.no_inspection_history))
     reports.forEach { report ->
         val date = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(report.timestampMillis))
         ExpandableRow(report.id, date) {
             PanelTitle(report.equipment.name)
+            if (onExportPdf != null) {
+                TextButton(onClick = { onExportPdf(report.id) }) { Text(stringResource(R.string.report_export_pdf)) }
+            }
             if (report.results.isNotEmpty()) {
                 report.results.forEach { result ->
                     PanelText(stringResource(R.string.field_value, result.step.component, stringResource(result.outcome.label)))
+                    result.observation?.let { PanelText(it) }
                     if (result.evidence.isNotEmpty()) {
                         PanelText(stringResource(R.string.evidence_count, result.evidence.size))
                     }
@@ -245,15 +371,16 @@ private fun HistoryDetails(reports: List<InspectionReport>) {
 }
 
 @Composable
-private fun ExpandableRow(id: String, label: String, details: @Composable () -> Unit) {
+private fun ExpandableRow(
+    id: String,
+    label: String,
+    details: @Composable () -> Unit,
+) {
     key(id) {
         var expanded by rememberSaveable { mutableStateOf(false) }
         Column(Modifier.fillMaxWidth().hudPanel().padding(horizontal = 8.dp)) {
-            TextButton(onClick = { expanded = !expanded }, modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    stringResource(if (expanded) R.string.expanded_row else R.string.collapsed_row, label),
-                    Modifier.fillMaxWidth(),
-                )
+            TextButton(onClick = { expanded = !expanded }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                Text(stringResource(if (expanded) R.string.expanded_row else R.string.collapsed_row, label), Modifier.fillMaxWidth())
             }
             if (expanded) {
                 Column(Modifier.padding(start = 10.dp, end = 10.dp, bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {

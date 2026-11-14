@@ -10,6 +10,8 @@ import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URLEncoder
 import java.net.URISyntaxException
+import java.io.ByteArrayOutputStream
+import java.io.IOException
 
 internal data class TerminalResponse(val status: Int, val body: String) {
     val successful: Boolean get() = status in 200..299
@@ -29,6 +31,13 @@ internal class TerminalServer {
     var address: String? = null
         private set
     private var token: String? = null
+    private var borrowedToken = false
+
+    fun copyConnection() = TerminalServer().also {
+        it.address = address
+        it.token = token
+        it.borrowedToken = token != null
+    }
 
     fun connect(value: String): Boolean {
         val uri = try {
@@ -42,7 +51,10 @@ internal class TerminalServer {
         ) return false
 
         val next = value.trimEnd('/')
-        if (address != next) token = null
+        if (address != next) {
+            token = null
+            borrowedToken = false
+        }
         address = next
         return true
     }
@@ -50,6 +62,7 @@ internal class TerminalServer {
     fun disconnect() {
         address = null
         token = null
+        borrowedToken = false
     }
 
     suspend fun health() = request("/health", authenticated = false)
@@ -69,6 +82,7 @@ internal class TerminalServer {
 
     suspend fun login(email: String, password: String): TerminalResponse {
         token = null
+        borrowedToken = false
         val data = JSONObject().put("email", email).put("password", password)
         val response = request("/auth/login", data, authenticated = false)
         if (!response.successful) return response
@@ -80,6 +94,11 @@ internal class TerminalServer {
     }
 
     suspend fun logout(): TerminalResponse {
+        if (borrowedToken) {
+            token = null
+            borrowedToken = false
+            return TerminalResponse(204, "")
+        }
         val response = request("/auth/logout", JSONObject())
         if (response.successful || response.status == 401) token = null
         return response
@@ -104,31 +123,61 @@ internal class TerminalServer {
 
     suspend fun report(id: Long) = request("/reports/$id")
 
+    suspend fun reportPdf(id: Long): ByteArray = exchange("/reports/$id/export/pdf", "application/pdf") { connection ->
+        if (connection.responseCode != 200 || connection.contentType?.substringBefore(';') != "application/pdf") {
+            throw IOException("PDF export returned ${connection.responseCode}")
+        }
+        val bytes = connection.inputStream.use { stream ->
+            val output = ByteArrayOutputStream()
+            val buffer = ByteArray(8192)
+            while (true) {
+                val count = stream.read(buffer)
+                if (count < 0) break
+                if (output.size() + count > 8 * 1024 * 1024) throw IOException("PDF exceeds the download limit")
+                output.write(buffer, 0, count)
+            }
+            output.toByteArray()
+        }
+        if (bytes.size < 5 || bytes.copyOfRange(0, 5).decodeToString() != "%PDF-") throw IOException("Invalid PDF")
+        bytes
+    }
+
+    suspend fun reviewFrame(equipmentId: Long, checkId: Long, data: JSONObject): TerminalResponse =
+        request("/equipment/$equipmentId/checks/$checkId/vision-review", data, readTimeoutMs = 45_000)
+
     private suspend fun request(
         path: String,
         data: JSONObject? = null,
         authenticated: Boolean = true,
-    ): TerminalResponse {
+        readTimeoutMs: Int = 4_000,
+    ): TerminalResponse = exchange(path, "application/json", authenticated, readTimeoutMs) { connection ->
+        if (data != null) {
+            connection.requestMethod = "POST"
+            connection.doOutput = true
+            connection.setRequestProperty("Content-Type", "application/json; charset=utf-8")
+            connection.outputStream.use { it.write(data.toString().toByteArray(Charsets.UTF_8)) }
+        }
+        val status = connection.responseCode
+        val stream = if (status >= 400) connection.errorStream else connection.inputStream
+        TerminalResponse(status, stream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty())
+    }
+
+    private suspend fun <T> exchange(
+        path: String, accept: String, authenticated: Boolean = true, readTimeoutMs: Int = 4_000,
+        read: (HttpURLConnection) -> T,
+    ): T {
         val url = URI.create(checkNotNull(address) + path).toURL()
         val bearer = token.takeIf { authenticated }
         return withContext(Dispatchers.IO) {
             val connection = url.openConnection() as HttpURLConnection
             try {
                 connection.connectTimeout = 4_000
-                connection.readTimeout = 4_000
+                connection.readTimeout = readTimeoutMs
                 connection.instanceFollowRedirects = false
                 connection.useCaches = false
-                connection.setRequestProperty("Accept", "application/json")
+                connection.setRequestProperty("Accept", accept)
                 bearer?.let { connection.setRequestProperty("Authorization", "Bearer $it") }
-                if (data != null) {
-                    connection.requestMethod = "POST"
-                    connection.doOutput = true
-                    connection.setRequestProperty("Content-Type", "application/json; charset=utf-8")
-                    connection.outputStream.use { it.write(data.toString().toByteArray(Charsets.UTF_8)) }
-                }
-                val status = connection.responseCode
-                val stream = if (status >= 400) connection.errorStream else connection.inputStream
-                TerminalResponse(status, stream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty())
+                read(connection)
             } finally {
                 connection.disconnect()
             }

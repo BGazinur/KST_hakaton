@@ -141,6 +141,9 @@ CREATE TABLE IF NOT EXISTS inspection_checks (
     acceptance_criteria TEXT NOT NULL,
     recommendation TEXT NOT NULL,
     visual_model TEXT CHECK (visual_model IN ('corrosion')),
+    visual_hint TEXT CHECK (visual_hint IN (
+        'shaft_leak', 'coupling_guard', 'motor_cable', 'motor_fins', 'motor_ground', 'motor_discoloration'
+    )),
     UNIQUE (equipment_id, position),
     UNIQUE (equipment_id, id)
 );

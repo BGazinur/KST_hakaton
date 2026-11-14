@@ -27,10 +27,12 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.systemGestureExclusion
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -46,6 +48,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -64,8 +67,11 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.arengineering.inspection.cv.CvStatus
+import kotlinx.coroutines.CancellationException
+import org.json.JSONObject
 
 private val LogoBlue = Color(0xFF125AA6)
 internal val SkyBlue = Color(0xFF8BBFFF)
@@ -85,6 +91,8 @@ internal fun InspectionScreen(
     onAction: (InspectionAction) -> Unit,
     onStartupAction: () -> Unit,
     onOpenTerminal: () -> Unit,
+    onExportPdf: (String) -> Unit,
+    onReviewFrame: suspend (String) -> JSONObject,
     onSwitchMode: () -> Unit,
 ) {
     MaterialTheme(
@@ -119,7 +127,7 @@ internal fun InspectionScreen(
                 TerminalButton(onOpenTerminal, Modifier.align(Alignment.TopEnd).padding(12.dp))
             }
         } else {
-            CameraHud(state, preview, issue, onAction, onStartupAction, onOpenTerminal)
+            CameraHud(state, preview, issue, onAction, onStartupAction, onOpenTerminal, onExportPdf, onReviewFrame)
         }
     }
 }
@@ -132,6 +140,8 @@ private fun CameraHud(
     onAction: (InspectionAction) -> Unit,
     onStartupAction: () -> Unit,
     onOpenTerminal: () -> Unit,
+    onExportPdf: (String) -> Unit,
+    onReviewFrame: suspend (String) -> JSONObject,
 ) {
     var drawerOpen by rememberSaveable { mutableStateOf(false) }
     var section by rememberSaveable { mutableStateOf<InspectionSection?>(null) }
@@ -142,8 +152,10 @@ private fun CameraHud(
     val status by remember(hud) { derivedStateOf { hud?.value?.status } }
     val hasAnchor by remember(hud) { derivedStateOf { hud?.value?.hasAnchor == true } }
     val stage = state.stage
+    val node = stage as? InspectionStage.InspectNode
     val manualMode = manual && state.isDemo && stage is InspectionStage.ScanQr && issue == null
-    val sensorAlert = state.findings.any { it.source == FindingSource.SENSOR }
+    val sensorAlert = (if (state.isDemo) state.findings else state.equipment?.alerts.orEmpty())
+        .any { it.source == FindingSource.SENSOR }
     val openSection: (InspectionSection) -> Unit = {
         drawerOpen = false
         section = it
@@ -185,7 +197,7 @@ private fun CameraHud(
         BoxWithConstraints(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing).imePadding()) {
             val compact = maxHeight < 480.dp
             TerminalButton(onOpenTerminal, Modifier.align(Alignment.TopEnd)
-                .padding(top = 12.dp, end = if (sensorAlert) 68.dp else 12.dp))
+                .padding(top = 12.dp, end = 12.dp))
             if (state.isDemo) {
                 Text(
                     stringResource(R.string.demo_mode),
@@ -199,7 +211,7 @@ private fun CameraHud(
                 val alertLabel = stringResource(R.string.sensor_alert)
                 Button(
                     onClick = { openSection(InspectionSection.FINDINGS) },
-                    modifier = Modifier.align(Alignment.TopEnd).padding(12.dp).size(48.dp)
+                    modifier = Modifier.align(Alignment.TopEnd).padding(top = 12.dp, end = 68.dp).size(48.dp)
                         .semantics { contentDescription = alertLabel },
                     shape = RoundedCornerShape(9.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9A2525), contentColor = Color.White),
@@ -213,32 +225,39 @@ private fun CameraHud(
             }
             Column(
                 Modifier.align(Alignment.BottomCenter).widthIn(max = 560.dp).fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .padding(bottom = 14.dp)
-                    .heightIn(max = maxHeight * (if (compact) 0.76f else 0.54f))
-                    .hudPanel().verticalScroll(rememberScrollState()).padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                    .padding(start = 16.dp, end = 16.dp, bottom = 10.dp)
+                    .heightIn(max = maxHeight * (if (compact) 0.72f else 0.49f))
+                    .hudPanel().padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                if (issue != null) {
-                    PanelTitle(stringResource(issue.title))
-                    PanelText(stringResource(issue.hint))
-                    issue.action?.let { id -> OutlinedButton(onClick = onStartupAction) { Text(stringResource(id)) } }
+                Column(
+                    Modifier.weight(1f, fill = false).fillMaxWidth().verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    if (issue != null) {
+                        PanelTitle(stringResource(issue.title))
+                        PanelText(stringResource(issue.hint))
+                        issue.action?.let { id -> OutlinedButton(onClick = onStartupAction) { Text(stringResource(id)) } }
+                    }
+                    if (manualMode) {
+                        PanelTitle(stringResource(R.string.manual_marker))
+                        PanelText(stringResource(trackingHint(status)))
+                        if (hasAnchor) {
+                            OutlinedButton(onClick = { preview?.clearMarker() }) { Text(stringResource(R.string.clear_marker)) }
+                        }
+                        TextButton(onClick = {
+                            preview?.clearMarker()
+                            manual = false
+                        }) { Text(stringResource(R.string.back_to_inspection)) }
+                    } else {
+                        StageContent(state, status, onAction, openSection, analysis, onExportPdf)
+                        if (state.isDemo && stage is InspectionStage.ScanQr && issue == null) {
+                            TextButton(onClick = { manual = true }) { Text(stringResource(R.string.manual_marker)) }
+                        }
+                    }
                 }
-                if (manualMode) {
-                    PanelTitle(stringResource(R.string.manual_marker))
-                    PanelText(stringResource(trackingHint(status)))
-                    if (hasAnchor) {
-                        OutlinedButton(onClick = { preview?.clearMarker() }) { Text(stringResource(R.string.clear_marker)) }
-                    }
-                    TextButton(onClick = {
-                        preview?.clearMarker()
-                        manual = false
-                    }) { Text(stringResource(R.string.back_to_inspection)) }
-                } else {
-                    StageContent(state, status, onAction, openSection, analysis?.status)
-                    if (state.isDemo && stage is InspectionStage.ScanQr && issue == null) {
-                        TextButton(onClick = { manual = true }) { Text(stringResource(R.string.manual_marker)) }
-                    }
+                if (node != null) key(node.step.id) {
+                    NodeActions(node, state.isDemo, preview != null && issue == null, onAction, onReviewFrame)
                 }
             }
 
@@ -254,7 +273,7 @@ private fun CameraHud(
         }
     }
     section?.let {
-        InspectionSectionDialog(it, state, onAction, onClose = { section = null })
+        InspectionSectionDialog(it, state, onAction, onExportPdf, onClose = { section = null })
     }
 }
 
@@ -284,7 +303,7 @@ private fun MenuHandle(modifier: Modifier, onOpen: () -> Unit) {
             .semantics { contentDescription = label },
         contentAlignment = Alignment.CenterEnd,
     ) {
-        Canvas(Modifier.size(20.dp, 93.dp).hudPanel()) {
+        Canvas(Modifier.size(25.dp, 93.dp).hudPanel()) {
             val x = center.x - 2.5.dp.toPx()
             val y = center.y
             val d = 5.dp.toPx()
@@ -299,7 +318,7 @@ internal fun Modifier.hudPanel() = background(Glass, PanelShape)
 
 @Composable
 internal fun PanelTitle(value: String) {
-    Text(value, color = SkyBlue, style = MaterialTheme.typography.titleMedium)
+    Text(value, color = SkyBlue, style = MaterialTheme.typography.titleLarge)
 }
 
 @Composable
@@ -320,11 +339,12 @@ private fun StageContent(
     status: HudStatus?,
     onAction: (InspectionAction) -> Unit,
     open: (InspectionSection) -> Unit,
-    cvStatus: CvStatus?,
+    analysis: CameraAnalysisUpdate?,
+    onExportPdf: (String) -> Unit,
 ) {
     when (val stage = state.stage) {
         is InspectionStage.ScanQr -> {
-            PanelTitle(stringResource(R.string.scan_qr))
+            PanelTitle(stringResource(if (state.isDemo) R.string.scan_qr else R.string.scan_equipment))
             if (!state.isDemo) PanelText(stringResource(R.string.cv_scan_hint))
             if (stage.lookingUp) LoadingLabel(R.string.loading)
             stage.error?.let {
@@ -357,7 +377,10 @@ private fun StageContent(
         InspectionStage.EquipmentPreview -> {
             state.equipment?.equipment?.let {
                 PanelTitle(it.name)
-                PanelText(stringResource(R.string.serial_number_value, it.serialNumber))
+                EquipmentIdentifier(it)
+                if (analysis?.target is CameraAnalysisTarget.FindPump) {
+                    CvStatusLine(analysis)
+                }
                 OutlinedButton(onClick = { open(InspectionSection.EQUIPMENT) }, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.open_equipment_card))
                 }
@@ -370,6 +393,7 @@ private fun StageContent(
             if (stage.missingData) PanelText(stringResource(R.string.missing_telemetry), Amber)
             stage.error?.let { ErrorText(it) }
             if (stage.error == null) {
+                if (!state.isDemo && stage.checks.isNotEmpty()) CheckSelection(stage, onAction)
                 ActionButton(R.string.continue_inspection) { onAction(InspectionAction.ContinueInspection) }
             } else {
                 ActionButton(R.string.retry) { onAction(InspectionAction.StartInspection) }
@@ -379,24 +403,77 @@ private fun StageContent(
             }
         }
         InspectionStage.FindPump -> {
-            PanelTitle(stringResource(R.string.find_pump))
+            PanelTitle(stringResource(if (state.isDemo) R.string.find_pump else R.string.cv_pump_title))
             if (state.isDemo) {
                 ActionButton(R.string.demo_find_pump) { onAction(InspectionAction.DemoFindPump) }
             } else {
-                val message = when (cvStatus) {
-                    CvStatus.EQUIPMENT_FOUND -> R.string.cv_pump_found
-                    CvStatus.AMBIGUOUS -> R.string.cv_pump_ambiguous
-                    else -> R.string.cv_pump_hint
-                }
-                PanelText(stringResource(message))
+                CvStatusLine(analysis)
                 ActionButton(
-                    if (cvStatus == CvStatus.EQUIPMENT_FOUND) R.string.cv_confirm_pump else R.string.cv_manual_continue,
+                    if (analysis?.status == CvStatus.EQUIPMENT_FOUND) R.string.cv_confirm_pump else R.string.cv_manual_continue,
                 ) { onAction(InspectionAction.ConfirmPump) }
             }
         }
-        is InspectionStage.InspectNode -> NodePanel(stage, status, state.isDemo, onAction)
-        is InspectionStage.Summary -> ReportPanel(stage, onAction)
+        is InspectionStage.InspectNode -> key(stage.step.id) { NodePanel(stage, status, state.isDemo, analysis, onAction) }
+        is InspectionStage.Summary -> ReportPanel(stage, onAction, onExportPdf.takeUnless { state.isDemo })
     }
+}
+
+@Composable
+private fun CheckSelection(stage: InspectionStage.AnalysisReady, onAction: (InspectionAction) -> Unit) {
+    var choosing by rememberSaveable { mutableStateOf(false) }
+    OutlinedButton(onClick = { choosing = true }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+        Text(stringResource(R.string.inspection_choose_checks, stage.selectedCheckIds.size, stage.checks.size))
+    }
+    if (choosing) {
+        InspectionDialog(
+            title = stringResource(R.string.inspection_checks_title),
+            onClose = { choosing = false },
+            closeLabel = R.string.done,
+        ) {
+            stage.checks.forEach { step ->
+                key(step.id) {
+                    val selected = step.id in stage.selectedCheckIds
+                    Row(
+                        Modifier.fillMaxWidth().toggleable(
+                            value = selected,
+                            enabled = !selected || stage.selectedCheckIds.size > 1,
+                            role = Role.Checkbox,
+                        ) { checked ->
+                            val selection = if (checked) stage.selectedCheckIds + step.id else stage.selectedCheckIds - step.id
+                            onAction(InspectionAction.SelectChecks(selection))
+                        }.padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Checkbox(checked = selected, onCheckedChange = null)
+                        Column {
+                            Text(step.component, color = Color.White, style = MaterialTheme.typography.bodyLarge)
+                            PanelText(stringResource(step.inspectionMethod))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CvStatusLine(analysis: CameraAnalysisUpdate?) {
+    val message = when {
+        analysis?.failed == true -> stringResource(R.string.cv_failed)
+        analysis == null || !analysis.tracking -> stringResource(R.string.cv_tracking)
+        !analysis.started -> stringResource(R.string.cv_wait_frame)
+        analysis.alignmentPending -> stringResource(R.string.cv_alignment)
+        analysis.status == CvStatus.EQUIPMENT_FOUND -> stringResource(R.string.cv_agent_found)
+        analysis.status == CvStatus.AMBIGUOUS -> stringResource(R.string.cv_agent_candidates)
+        analysis.status == CvStatus.EQUIPMENT_NOT_FOUND -> stringResource(R.string.cv_agent_no_pump)
+        analysis.status == CvStatus.NO_DEFECT_DETECTED -> stringResource(R.string.cv_agent_no_signs)
+        analysis.status == CvStatus.HINT_FOUND -> stringResource(R.string.cv_target_found)
+        analysis.status == CvStatus.HINT_NOT_FOUND -> stringResource(R.string.cv_target_not_found)
+        analysis.inferenceMs != null -> stringResource(R.string.cv_analyzed)
+        else -> stringResource(R.string.cv_processing)
+    }
+    PanelText(message, if (analysis?.failed == true) Amber else Muted)
 }
 
 @Composable
@@ -404,56 +481,149 @@ private fun NodePanel(
     stage: InspectionStage.InspectNode,
     status: HudStatus?,
     demo: Boolean,
+    analysis: CameraAnalysisUpdate?,
     onAction: (InspectionAction) -> Unit,
 ) {
+    val progress = stringResource(R.string.node_progress, stage.number, stage.total)
     Text(
-        stringResource(R.string.node_progress, stage.number, stage.total),
+        if (demo) progress else stringResource(R.string.field_value, progress, stringResource(stage.step.inspectionMethod)),
         color = SkyBlue, style = MaterialTheme.typography.labelMedium,
     )
     PanelTitle(stage.step.component)
     val result = stage.result
     if (result == null) {
-        PanelText(stage.step.instruction)
-        stage.guidance?.let { PanelText(it, Amber) }
+        Text(stage.step.instruction, color = Color.White, style = MaterialTheme.typography.bodyLarge)
+        if (stage.visionObservation != null) PanelText(stringResource(R.string.vision_review_note_added))
         if (stage.scanCorrosion) {
             val confidence = stage.corrosionConfidence
-            PanelText(
-                if (confidence == null) stringResource(R.string.cv_corrosion_hint)
-                else stringResource(R.string.cv_corrosion_candidate, formatConfidence(confidence)),
-                if (confidence == null) Muted else Amber,
-            )
-        }
-        if (status != null && !status.canProject) {
-            PanelText(stringResource(trackingHint(status)), Amber)
-        }
-        if (demo) {
-            ActionButton(R.string.demo_read_node) { onAction(InspectionAction.DemoReadNode(stage.step.id)) }
-        } else {
-            val outcomes = listOf(
-                StepOutcome.CLEAR, StepOutcome.POSSIBLE_DEFECT, StepOutcome.CONFIRMED_DEFECT, StepOutcome.INCONCLUSIVE,
-            )
-            outcomes.forEach { outcome ->
-                OutlinedButton(onClick = { onAction(InspectionAction.RecordNode(stage.step.id, outcome)) }, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(outcome.label))
-                }
+            if (confidence == null || analysis?.alignmentPending == true) CvStatusLine(analysis)
+            if (confidence != null) PanelText(stringResource(R.string.cv_corrosion_mark), Amber)
+        } else if (stage.agentHint != null) {
+            if (stage.agentHintEnabled) CvStatusLine(analysis)
+            TextButton(onClick = { onAction(InspectionAction.SetAgentHint(!stage.agentHintEnabled)) }) {
+                Text(stringResource(if (stage.agentHintEnabled) R.string.cv_hide_target else R.string.cv_show_target))
             }
-        }
-        OutlinedButton(onClick = { onAction(InspectionAction.SkipNode(stage.step.id)) }, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.skip_node))
+        } else if (demo && status != null && !status.canProject) {
+            PanelText(stringResource(trackingHint(status)), Amber)
         }
     } else {
         PanelText(stringResource(result.outcome.label), if (result.outcome == StepOutcome.CLEAR) Muted else Amber)
-        if (status != null && !status.canProject) PanelText(stringResource(trackingHint(status)), Amber)
         result.findings.forEach {
             PanelText(it.reason)
             PanelText(it.recommendation)
         }
-        ActionButton(R.string.next_node) { onAction(InspectionAction.NextNode(stage.step.id)) }
     }
 }
 
 @Composable
-private fun ReportPanel(stage: InspectionStage.Summary, onAction: (InspectionAction) -> Unit) {
+private fun NodeActions(
+    stage: InspectionStage.InspectNode, demo: Boolean, cameraReady: Boolean,
+    onAction: (InspectionAction) -> Unit, onReviewFrame: suspend (String) -> JSONObject,
+) {
+    var chooseOutcome by rememberSaveable { mutableStateOf(false) }
+    var showGuidance by rememberSaveable { mutableStateOf(false) }
+    var showReview by remember { mutableStateOf(false) }
+    if (stage.result != null) {
+        ActionButton(R.string.next_node) { onAction(InspectionAction.NextNode(stage.step.id)) }
+        return
+    }
+
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (stage.guidance != null) {
+            TextButton(onClick = { showGuidance = true }, modifier = Modifier.weight(1f)) {
+                Text(stringResource(R.string.inspection_guidance))
+            }
+        }
+        TextButton(onClick = { onAction(InspectionAction.SkipNode(stage.step.id)) }, modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.skip_node))
+        }
+    }
+    if (demo) {
+        ActionButton(R.string.demo_read_node) { onAction(InspectionAction.DemoReadNode(stage.step.id)) }
+    } else {
+        if (cameraReady) {
+            TextButton(onClick = { showReview = true }, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.vision_review_button))
+            }
+        }
+        ActionButton(R.string.inspection_record) { chooseOutcome = true }
+    }
+
+    if (showReview) VisionReviewDialog(stage.step.id, onReviewFrame, onAccept = { observation ->
+        onAction(InspectionAction.AcceptVisionObservation(stage.step.id, observation))
+        showReview = false
+    }, onClose = { showReview = false })
+
+    if (showGuidance) {
+        InspectionDialog(title = stringResource(R.string.inspection_guidance), onClose = { showGuidance = false }) {
+            stage.guidance?.let { PanelText(it) }
+            stage.corrosionConfidence?.let {
+                PanelText(stringResource(R.string.cv_corrosion_candidate, formatConfidence(it)), Amber)
+            }
+        }
+    }
+    if (chooseOutcome) {
+        val outcomes = listOf(
+            StepOutcome.CLEAR, StepOutcome.POSSIBLE_DEFECT, StepOutcome.CONFIRMED_DEFECT,
+            StepOutcome.REVIEW, StepOutcome.INCONCLUSIVE,
+        )
+        InspectionDialog(title = stringResource(R.string.inspection_record), onClose = { chooseOutcome = false }) {
+            PanelText(stage.step.component)
+            outcomes.forEach { outcome ->
+                OutlinedButton(
+                    onClick = {
+                        chooseOutcome = false
+                        onAction(InspectionAction.RecordNode(stage.step.id, outcome))
+                    },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                ) {
+                    Text(stringResource(outcome.label))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun VisionReviewDialog(
+    stepId: String, onReviewFrame: suspend (String) -> JSONObject, onAccept: (String) -> Unit, onClose: () -> Unit,
+) {
+    var review by remember { mutableStateOf<JSONObject?>(null) }
+    var failed by remember { mutableStateOf(false) }
+    LaunchedEffect(stepId) {
+        try {
+            review = onReviewFrame(stepId)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            failed = true
+        }
+    }
+    InspectionDialog(title = stringResource(R.string.vision_review_button), onClose = onClose) {
+        val result = review
+        when {
+            failed -> PanelText(stringResource(R.string.vision_review_failed), Amber)
+            result == null -> LoadingLabel(R.string.vision_review_waiting)
+            else -> {
+                val status = when (result.optString("status")) {
+                    "visible_sign" -> R.string.vision_review_sign
+                    "no_visible_sign" -> R.string.vision_review_empty
+                    else -> R.string.vision_review_unclear
+                }
+                PanelTitle(stringResource(status))
+                PanelText(result.optString("observation"))
+                if (status == R.string.vision_review_unclear) PanelText(stringResource(R.string.vision_review_another_view))
+                PanelText(stringResource(R.string.vision_review_manual), Amber)
+                if (status == R.string.vision_review_sign) {
+                    ActionButton(R.string.vision_review_add_note) { onAccept(result.getString("observation")) }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReportPanel(stage: InspectionStage.Summary, onAction: (InspectionAction) -> Unit, onExportPdf: ((String) -> Unit)?) {
     var note by rememberSaveable(stage.report.id) { mutableStateOf(stage.report.note) }
     PanelTitle(stringResource(R.string.inspection_summary))
     PanelText(
@@ -464,6 +634,11 @@ private fun ReportPanel(stage: InspectionStage.Summary, onAction: (InspectionAct
         Text(stringResource(R.string.report_sent), color = SkyBlue, modifier = Modifier.semantics {
             liveRegion = LiveRegionMode.Polite
         })
+        if (onExportPdf != null) {
+            OutlinedButton(onClick = { onExportPdf(stage.report.id) }, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.report_export_pdf))
+            }
+        }
         ActionButton(R.string.new_inspection) { onAction(InspectionAction.NewInspection) }
     } else {
         OutlinedTextField(
@@ -483,11 +658,11 @@ internal fun ActionButton(label: Int, enabled: Boolean = true, onClick: () -> Un
     Button(
         onClick = onClick,
         enabled = enabled,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
         shape = RoundedCornerShape(10.dp),
         colors = ButtonDefaults.buttonColors(containerColor = LogoBlue, contentColor = Color.White),
     ) {
-        Text(stringResource(label))
+        Text(stringResource(label), fontSize = 16.sp)
     }
 }
 

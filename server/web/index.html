@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AR Engineering — сервер</title>
+  <link rel="stylesheet" href="/panel/assets/style.css">
+  <script type="module" src="/panel/assets/panel.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/panel"><span class="brand-mark" aria-hidden="true">AR</span> Engineering</a>
+    <div class="session" id="session" hidden>
+      <span id="profile"></span>
+      <button id="logout" type="button" class="secondary">Выйти</button>
+    </div>
+  </header>
+  <main>
+    <section id="login-view" class="login surface" aria-labelledby="login-title">
+      <h1 id="login-title">Вход в панель сервера</h1>
+      <p class="muted">Используйте учётную запись из Android-приложения.</p>
+      <form id="login-form" method="post">
+        <label>Почта<input name="email" type="email" autocomplete="username" maxlength="254" required></label>
+        <label>Пароль<input name="password" type="password" autocomplete="current-password" maxlength="128" required></label>
+        <button>Войти</button>
+        <p id="login-status" class="notice" role="status" hidden></p>
+      </form>
+    </section>
+    <section id="workspace" hidden>
+      <div class="masthead">
+        <div><h1>Панель сервера</h1><p class="muted">Паспорта, показания и история осмотров</p></div>
+        <div class="server-status"><span aria-hidden="true"></span> Локальный сервер</div>
+      </div>
+      <nav class="navigation" aria-label="Разделы панели">
+        <button type="button" id="show-equipment" aria-pressed="true">Оборудование</button>
+        <button type="button" id="show-users" aria-pressed="false" hidden>Пользователи</button>
+      </nav>
+      <p id="panel-status" class="notice" role="status" hidden></p>
+      <section id="equipment-view" class="equipment-layout" aria-label="Оборудование">
+        <aside class="surface inventory">
+          <div class="section-heading"><h2>Оборудование</h2><span id="equipment-count" class="count"></span></div>
+          <ul id="equipment-list" class="equipment-list"></ul>
+          <details id="add-equipment" hidden>
+            <summary>Добавить оборудование</summary>
+            <form id="equipment-form" method="post">
+              <label>Название<input name="name" maxlength="254" required></label>
+              <label>Инвентарный номер<input name="asset_tag" maxlength="254" required></label>
+              <label>Тип
+                <select name="kind">
+                  <option value="centrifugal_pump">Центробежный насос</option>
+                  <option value="pump">Другой насос</option>
+                  <option value="motor">Электродвигатель</option>
+                  <option value="valve">Арматура</option>
+                  <option value="transformer">Трансформатор</option>
+                  <option value="conveyor">Конвейер</option>
+                  <option value="heat_exchanger">Теплообменник</option>
+                  <option value="compressor">Компрессор</option>
+                  <option value="other">Другое</option>
+                </select>
+              </label>
+              <label>Модель<input name="model" maxlength="254"></label>
+              <label>Серийный номер<input name="serial_number" maxlength="254"></label>
+              <label>QR-код<input name="qr" maxlength="254"></label>
+              <label>Восьмизначный номер шильдика<input name="nameplate" pattern="[0-9]{8}" inputmode="numeric"></label>
+              <label>Родительское оборудование<select name="parent_id" id="parent-equipment"></select></label>
+              <label>Дата установки<input name="installed_on" type="date"></label>
+              <label>Описание<textarea name="description" maxlength="4000"></textarea></label>
+              <button>Добавить оборудование</button>
+            </form>
+          </details>
+        </aside>
+        <section id="equipment-content" class="asset-content" aria-label="Карточка оборудования" hidden>
+          <div class="surface asset-heading">
+            <div><p id="asset-tag" class="asset-tag"></p><h2 id="asset-name"></h2><p id="asset-details" class="muted"></p></div>
+            <button id="refresh" type="button" class="secondary">Обновить данные</button>
+          </div>
+          <div class="surface asset-section" id="readings">
+            <div class="section-heading"><h3>Текущие показания</h3><span id="sample-source" class="tag" hidden></span></div>
+            <p id="sample-date" class="muted"></p>
+            <div id="readings-body"></div>
+            <button id="resume-replay" type="button" class="secondary" hidden>Возобновить демонстрацию</button>
+            <details id="sample-history"><summary>История внесённых замеров</summary><div id="sample-history-body"></div></details>
+          </div>
+          <div class="surface asset-section" id="twin">
+            <h3>Цифровой двойник</h3>
+            <div id="twin-body"></div>
+          </div>
+          <div class="surface asset-section">
+            <h3>Отчёты об осмотрах</h3>
+            <div id="reports"></div>
+          </div>
+          <div class="surface asset-section" id="asset-forms" hidden>
+            <h3>Добавить данные</h3>
+            <details data-admin hidden>
+              <summary>Замер датчиков</summary>
+              <form id="sample-form" method="post" class="form-grid">
+                <label>Время замера<input type="datetime-local" name="measured_at" step="1" required></label>
+                <label>Обороты, об/мин<input type="number" name="speed_rpm" min="0" max="10000000" required></label>
+                <label>СКЗ вибрации, мм/с<input type="number" name="overall_rms_mm_s" min="0" step="any" required></label>
+                <label>Амплитуда 1×, мм/с<input type="number" name="amplitude_1x_mm_s" min="0" step="any" required></label>
+                <label>Амплитуда 2×, мм/с<input type="number" name="amplitude_2x_mm_s" min="0" step="any" required></label>
+                <label>ВЧ-шум, g<input type="number" name="hf_noise_g" min="0" step="any" required></label>
+                <label>Температура подшипника, °C<input type="number" name="pump_bearing_c" step="any" required></label>
+                <label>Температура обмоток, °C<input type="number" name="motor_winding_c" step="any" required></label>
+                <label>Диагноз по вибрации<input name="vibration_diagnosis" maxlength="254"></label>
+                <label>Диагноз по температуре<input name="temperature_diagnosis" maxlength="254"></label>
+                <button>Сохранить замер</button>
+              </form>
+            </details>
+            <details data-admin hidden>
+              <summary>Датчик и уставки</summary>
+              <form id="sensor-form" method="post" class="form-grid">
+                <label>Измеряемая величина<select name="code" id="sensor-type"></select></label>
+                <label>Название<input name="label" maxlength="254" required></label>
+                <label>Единица измерения<input name="unit" maxlength="254" required></label>
+                <label>Источник уставок<input name="source" maxlength="254" required></label>
+                <label>Номинал<input name="nominal_value" type="number" step="any"></label>
+                <label>Предупреждение выше<input name="warning_above" type="number" step="any"></label>
+                <label>Тревога выше<input name="alarm_above" type="number" step="any"></label>
+                <button>Добавить датчик</button>
+              </form>
+            </details>
+            <details data-admin hidden>
+              <summary>Шаг осмотра</summary>
+              <form id="check-form" method="post" class="form-grid">
+                <label class="wide">Название<input name="title" maxlength="254" required></label>
+                <label>Инструкция<textarea name="instructions" maxlength="4000" required></textarea></label>
+                <label>Критерий проверки<textarea name="acceptance_criteria" maxlength="4000" required></textarea></label>
+                <label class="wide">Рекомендация<textarea name="recommendation" maxlength="4000" required></textarea></label>
+                <button>Добавить шаг</button>
+              </form>
+            </details>
+            <details data-admin hidden>
+              <summary>Документ оборудования</summary>
+              <form id="document-form" method="post" enctype="multipart/form-data" class="form-grid">
+                <label>Вид документа
+                  <select name="kind">
+                    <option value="passport">Паспорт</option>
+                    <option value="manual">Руководство</option>
+                    <option value="operating_map">Режимная карта</option>
+                    <option value="maintenance_regulation">Регламент ТО</option>
+                  </select>
+                </label>
+                <label>Название<input name="title" maxlength="254" required></label>
+                <label>Редакция<input name="revision" maxlength="100"></label>
+                <label>Документ PDF, до 10 МБ<input name="file" type="file" accept=".pdf,application/pdf" required></label>
+                <button>Добавить файл</button>
+              </form>
+            </details>
+            <details id="verification" hidden>
+              <summary>Поверка датчика</summary>
+              <form id="verification-form" method="post" enctype="multipart/form-data" class="form-grid">
+                <label>Датчик<select name="sensor_code" id="verification-sensor" required></select></label>
+                <label>Название<input name="title" maxlength="254" required></label>
+                <label>Дата поверки<input name="performed_at" type="date" required></label>
+                <label>Действует до<input name="valid_until" type="date"></label>
+                <label>Результат
+                  <select name="outcome">
+                    <option value="pass">Успешно</option><option value="fail">Не пройдена</option>
+                    <option value="inconclusive">Нет заключения</option>
+                  </select>
+                </label>
+                <label>Номер свидетельства<input name="certificate_number" maxlength="100"></label>
+                <label>Протокол PDF, до 10 МБ<input name="protocol" type="file" accept=".pdf,application/pdf"></label>
+                <label class="wide">Описание<textarea name="details" maxlength="4000"></textarea></label>
+                <button>Сохранить поверку</button>
+              </form>
+            </details>
+          </div>
+        </section>
+      </section>
+      <section id="users-view" class="user-layout" hidden aria-label="Пользователи">
+        <div class="surface asset-section"><h2>Пользователи</h2><div id="users"></div></div>
+        <div class="surface asset-section">
+          <h2>Добавить пользователя</h2>
+          <form id="user-form" method="post">
+            <label>Имя<input name="display_name" autocomplete="off" maxlength="254" required></label>
+            <label>Почта<input name="email" type="email" autocomplete="off" maxlength="254" required></label>
+            <label>Пароль, от 12 символов<input name="password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></label>
+            <label>Роль
+              <select name="role">
+                <option value="engineer">Инженер</option><option value="supervisor">Мастер</option>
+                <option value="admin">Администратор</option>
+              </select>
+            </label>
+            <button>Создать пользователя</button>
+          </form>
+        </div>
+      </section>
+    </section>
+  </main>
+</body>
+</html>

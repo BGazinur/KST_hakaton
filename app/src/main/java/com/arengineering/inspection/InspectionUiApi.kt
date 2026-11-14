@@ -22,11 +22,27 @@ data class InspectionUiState(
 
 data class InspectorAccount(val fullName: String, val position: String, val login: String)
 
-data class EquipmentRef(val id: String, val name: String, val serialNumber: String)
+data class EquipmentRef(
+    val id: String,
+    val name: String,
+    val serialNumber: String,
+    val kind: String = "",
+    val hasSerialNumber: Boolean = true,
+)
 
 data class InspectionField(val name: String, val value: String)
 
 data class ComponentCard(val id: String, val name: String, val fields: List<InspectionField>)
+
+enum class ReadingStatus { NORMAL, WARNING, ALARM, UNCLASSIFIED, MISSING }
+
+data class PassportReading(
+    val code: String,
+    val label: String,
+    val value: String?,
+    val status: ReadingStatus,
+    val limits: List<InspectionField>,
+)
 
 data class EquipmentCard(
     val equipment: EquipmentRef,
@@ -34,6 +50,13 @@ data class EquipmentCard(
     val telemetry: List<InspectionField> = emptyList(),
     val components: List<ComponentCard> = emptyList(),
     val previousFindings: List<InspectionFinding> = emptyList(),
+    val readings: List<PassportReading> = emptyList(),
+    val sampleUpdatedAt: Long? = null,
+    val replay: Boolean = false,
+    val refreshFailed: Boolean = false,
+    val alerts: List<InspectionFinding> = emptyList(),
+    val operation: List<InspectionField> = emptyList(),
+    val checks: List<InspectionStep> = emptyList(),
 )
 
 enum class FindingSource { SENSOR, REGULATION, VISUAL }
@@ -49,7 +72,13 @@ data class InspectionFinding(
     val confidence: Float? = null,
 )
 
-data class InspectionStep(val id: String, val component: String, val instruction: String)
+data class InspectionStep(
+    val id: String,
+    val component: String,
+    val instruction: String,
+    val visualModel: String? = null,
+    val agentHint: String? = null,
+)
 
 data class Evidence(val id: String, val frameTimestampNanos: Long, val localUri: String)
 
@@ -60,6 +89,7 @@ data class StepResult(
     val outcome: StepOutcome,
     val findings: List<InspectionFinding> = emptyList(),
     val evidence: List<Evidence> = emptyList(),
+    val observation: String? = null,
 )
 
 data class InspectionReport(
@@ -81,7 +111,12 @@ sealed interface InspectionStage {
     ) : InspectionStage
     data object EquipmentPreview : InspectionStage
     data object Analyzing : InspectionStage
-    data class AnalysisReady(val missingData: Boolean = false, val error: String? = null) : InspectionStage
+    data class AnalysisReady(
+        val missingData: Boolean = false,
+        val error: String? = null,
+        val checks: List<InspectionStep> = emptyList(),
+        val selectedCheckIds: Set<String> = emptySet(),
+    ) : InspectionStage
     data object FindPump : InspectionStage
     data class InspectNode(
         val step: InspectionStep,
@@ -89,9 +124,13 @@ sealed interface InspectionStage {
         val total: Int,
         val guidance: String? = null,
         val result: StepResult? = null,
-        val scanCorrosion: Boolean = false,
         val corrosionConfidence: Float? = null,
-    ) : InspectionStage
+        val agentHintEnabled: Boolean = false,
+        val visionObservation: String? = null,
+    ) : InspectionStage {
+        val scanCorrosion: Boolean get() = step.visualModel == "corrosion"
+        val agentHint: String? get() = step.agentHint
+    }
     data class Summary(
         val report: InspectionReport,
         val saving: Boolean = false,
@@ -108,10 +147,12 @@ data class ProjectedMark(
     val warning: Boolean = false,
 )
 
+data class ProjectedMask(val rings: List<List<ViewportPoint>>)
+
 data class InspectionOverlay(
-    val pumpContour: List<ViewportPoint> = emptyList(),
+    val pumpMasks: List<ProjectedMask> = emptyList(),
     val marks: List<ProjectedMark> = emptyList(),
-    val defectRegions: List<List<ViewportPoint>> = emptyList(),
+    val defectMasks: List<ProjectedMask> = emptyList(),
 )
 
 sealed interface InspectionAction {
@@ -121,6 +162,9 @@ sealed interface InspectionAction {
     data object OpenEquipmentPicker : InspectionAction
     data class SelectEquipment(val id: String) : InspectionAction
     data object StartInspection : InspectionAction
+    data class SelectChecks(val ids: Set<String>) : InspectionAction
+    data class SetAgentHint(val enabled: Boolean) : InspectionAction
+    data class AcceptVisionObservation(val stepId: String, val observation: String) : InspectionAction
     data object ContinueInspection : InspectionAction
     data object ConfirmPump : InspectionAction
     data class SkipNode(val stepId: String) : InspectionAction

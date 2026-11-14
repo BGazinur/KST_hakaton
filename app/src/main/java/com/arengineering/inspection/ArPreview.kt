@@ -31,6 +31,7 @@ internal class ArPreview(
     val view = GLSurfaceView(context)
     private val analysis = InspectionCameraAnalysis(
         context.applicationContext.assets, onCode, context.getString(R.string.cv_frame_label),
+        context.getString(R.string.cv_corrosion_mark),
     )
     private val renderer = ArRenderer(
         rotation = { view.display?.rotation ?: Surface.ROTATION_0 },
@@ -43,6 +44,7 @@ internal class ArPreview(
     fun analyze(target: CameraAnalysisTarget?) = analysis.select(target)
     fun isCurrentCode(code: EquipmentLookupRequest) = analysis.isCurrentCode(code)
     fun closeAnalysis() = analysis.close()
+    suspend fun captureReview(target: CameraAnalysisTarget) = analysis.captureReview(target)
 
     init {
         view.setEGLContextClientVersion(2)

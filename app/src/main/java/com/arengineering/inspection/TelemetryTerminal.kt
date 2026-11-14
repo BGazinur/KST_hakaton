@@ -53,7 +53,12 @@ import java.text.DateFormat
 import java.util.Date
 
 @Composable
-internal fun TelemetryTerminal(telemetry: TelemetryDao, server: TerminalServer, onDismiss: () -> Unit) {
+internal fun TelemetryTerminal(
+    telemetry: TelemetryDao,
+    server: TerminalServer,
+    selectedEquipmentId: Long?,
+    onDismiss: () -> Unit,
+) {
     var input by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var loginEmail by remember { mutableStateOf<String?>(null) }
@@ -113,6 +118,7 @@ internal fun TelemetryTerminal(telemetry: TelemetryDao, server: TerminalServer, 
         input = ""
         val name = parts.first().lowercase()
         val args = parts.drop(1)
+        val defaultId = selectedEquipmentId ?: 1L
         command = if (name == "login") name else parts.joinToString(" ")
         val id = args.firstOrNull()?.toLongOrNull()?.takeIf { it > 0 }
         when {
@@ -142,10 +148,10 @@ internal fun TelemetryTerminal(telemetry: TelemetryDao, server: TerminalServer, 
             }
             name == "logout" -> runRequest { server.logout() }
             name == "pasport" && (args.isEmpty() || args.size == 1 && id != null) ->
-                runRequest { server.passport(id ?: 1L, checksOnly = false) }
+                runRequest { server.passport(id ?: defaultId, checksOnly = false) }
             name == "watch" && (args.isEmpty() || args.size == 1 && id != null) -> {
                 watchJob = scope.launch {
-                    while (respond { server.passport(id ?: 1L, checksOnly = false) }) {
+                    while (respond { server.passport(id ?: defaultId, checksOnly = false) }) {
                         delay(1_000)
                     }
                 }

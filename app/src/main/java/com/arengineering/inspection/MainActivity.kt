@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -30,6 +31,10 @@ import com.google.ar.core.exceptions.UnavailableArcoreNotInstalledException
 import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException
+import java.io.IOException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
     private var preview by mutableStateOf<ArPreview?>(null)
@@ -42,6 +47,28 @@ class MainActivity : ComponentActivity() {
     private var foreground = false
     private var previewRunning = false
     private var installRequested = false
+    private var pendingPdf: ByteArray? = null
+    private var exportingPdf = false
+
+    private val savePdf = registerForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { uri ->
+        val pdf = pendingPdf
+        pendingPdf = null
+        exportingPdf = false
+        if (uri != null && pdf != null) lifecycleScope.launch {
+            val saved = withContext(Dispatchers.IO) {
+                try {
+                    val output = contentResolver.openOutputStream(uri) ?: throw IOException("Missing document stream")
+                    output.use { it.write(pdf) }
+                    true
+                } catch (_: IOException) {
+                    false
+                } catch (_: SecurityException) {
+                    false
+                }
+            }
+            Toast.makeText(this@MainActivity, if (saved) R.string.report_pdf_saved else R.string.report_pdf_failed, Toast.LENGTH_LONG).show()
+        }
+    }
 
     private val cameraPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) {
@@ -68,17 +95,32 @@ class MainActivity : ComponentActivity() {
         setContent {
             val active = controller
             val state by active.state.collectAsState()
-            val terminalServer = remember { TerminalServer() }
+            val standaloneTerminal = remember { TerminalServer() }
             var terminalOpen by rememberSaveable { mutableStateOf(false) }
             InspectionScreen(
                 state, preview, issue, onAction = active::dispatch,
                 onStartupAction = ::handleStartupAction,
                 onOpenTerminal = { terminalOpen = true },
-                onSwitchMode = { demoMode = !demoMode },
+                onExportPdf = ::exportPdf,
+                onReviewFrame = { stepId ->
+                    val target = serverController.state.value.cameraAnalysisTarget() ?: throw IOException()
+                    val photo = preview?.captureReview(target) ?: throw IOException()
+                    serverController.reviewFrame(stepId, photo)
+                },
+                onSwitchMode = {
+                    demoMode = !demoMode
+                    serverController.enableLiveUpdates(foreground && !demoMode)
+                },
             )
             if (terminalOpen) {
                 val database = (application as InspectionApplication).telemetryDatabase
-                TelemetryTerminal(database.telemetry(), terminalServer, onDismiss = { terminalOpen = false })
+                val useAppSession = active === serverController && state.account != null
+                val terminalServer = remember(useAppSession) {
+                    if (useAppSession) serverController.terminalConnection() else standaloneTerminal
+                }
+                TelemetryTerminal(database.telemetry(), terminalServer, state.equipment?.equipment?.id?.toLongOrNull()) {
+                    terminalOpen = false
+                }
             }
             LaunchedEffect(active) {
                 active.state.collect { value ->
@@ -100,6 +142,25 @@ class MainActivity : ComponentActivity() {
                         serverController.onCorrosionCandidate(update.confidence)
                     }
                 }
+            }
+        }
+    }
+
+    private fun exportPdf(reportId: String) {
+        val id = reportId.toLongOrNull() ?: return
+        if (exportingPdf || demoMode || serverController.state.value.account == null) return
+        exportingPdf = true
+        lifecycleScope.launch {
+            try {
+                pendingPdf = serverController.reportPdf(id)
+                savePdf.launch("inspection-$id.pdf")
+            } catch (_: IOException) {
+                exportingPdf = false
+                Toast.makeText(this@MainActivity, R.string.report_pdf_failed, Toast.LENGTH_LONG).show()
+            } catch (_: android.content.ActivityNotFoundException) {
+                pendingPdf = null
+                exportingPdf = false
+                Toast.makeText(this@MainActivity, R.string.report_pdf_failed, Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -126,11 +187,13 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         foreground = true
+        serverController.enableLiveUpdates(!demoMode)
         if (preview == null) startArIfNeeded() else startAr()
     }
 
     override fun onPause() {
         foreground = false
+        serverController.enableLiveUpdates(false)
         pauseSession()
         super.onPause()
     }

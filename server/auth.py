@@ -24,10 +24,10 @@ def create_user(db, email, password, display_name, role):
         raise ValueError("Пароль должен содержать от 12 до 128 символов.")
     if not display_name.strip():
         raise ValueError("Укажите имя пользователя.")
-    db.execute(
+    return db.execute(
         "INSERT INTO users (email, password_hash, display_name, role) VALUES (?, ?, ?, ?)",
         (normalize_email(email), PASSWORDS.hash(password), display_name.strip(), role),
-    )
+    ).lastrowid
 
 
 def token_hash(token):

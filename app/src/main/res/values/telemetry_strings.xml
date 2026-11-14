@@ -1,7 +1,7 @@
 <resources>
     <string name="telemetry_terminal_title">Терминал</string>
     <string name="telemetry_terminal_close">Закрыть</string>
-    <string name="telemetry_terminal_hint">pasport — местные показания или паспорт с сервера\nserver http://192.168.1.10:8000 — адрес ноутбука\nhealth — связь с сервером\nlogin почта — вход\nwatch 1 — обновлять паспорт насоса\nchecks 1 — узлы и шаги осмотра\nsavecheck 1 1 no_visible_issue — сохранить результат\nreport 1 — прочитать отчёт по ID\nlogout — выйти\nlocal — вернуться к базе на телефоне</string>
+    <string name="telemetry_terminal_hint">pasport — паспорт выбранного оборудования\nwatch — обновлять этот паспорт\nserver http://192.168.1.10:8000 — адрес ноутбука\nhealth — связь с сервером\nlogin почта — вход в терминале\nchecks 1 — узлы и шаги осмотра\nsavecheck 1 1 no_visible_issue — сохранить результат\nreport 1 — прочитать отчёт по ID\nlogout — выйти из терминала\nlocal — открыть демонстрационную базу на телефоне</string>
     <string name="telemetry_command">Команда</string>
     <string name="telemetry_run_command">Выполнить</string>
     <string name="telemetry_unknown_command">Проверьте команду и её параметры. Список команд — help.</string>
