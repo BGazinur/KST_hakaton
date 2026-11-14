@@ -93,7 +93,7 @@ internal fun InspectionSectionDialog(
                 Modifier.fillMaxWidth().padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Text(stringResource(section.label), style = MaterialTheme.typography.headlineSmall, color = Cyan)
+                Text(stringResource(section.label), style = MaterialTheme.typography.headlineSmall, color = SkyBlue)
                 Column(
                     Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(12.dp),

@@ -64,11 +64,13 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 
-internal val Cyan = Color(0xFF65F3EB)
-internal val Amber = Color(0xFFFFC063)
-internal val Night = Color(0xFF071317)
-internal val Glass = Color(0xED112428)
-internal val Muted = Color(0xFFC1D5D6)
+private val LogoBlue = Color(0xFF125AA6)
+internal val SkyBlue = Color(0xFF8BBFFF)
+internal val Amber = Color(0xFFFFB56E)
+internal val Night = Color(0xFF081524)
+internal val Glass = Color(0xED122B48)
+internal val Muted = Color(0xFFC3D4E9)
+private val BackgroundBlue = Color(0xFF123660)
 internal val PanelShape = RoundedCornerShape(18.dp)
 private val Red = Color(0xFFFFB4AA)
 
@@ -82,13 +84,14 @@ internal fun InspectionScreen(
 ) {
     MaterialTheme(
         colorScheme = darkColorScheme(
-            primary = Cyan, onPrimary = Night, surface = Night, onSurface = Color(0xFFE6F1F1),
-            onSurfaceVariant = Muted, outline = Color(0xFF567174), error = Red,
+            primary = SkyBlue, onPrimary = Night, surface = Night, onSurface = Color(0xFFEAF3FF),
+            onSurfaceVariant = Muted, outline = Color(0xFF6C8CAD),
+            outlineVariant = Color(0xFF3E5C7F), error = Red,
         ),
     ) {
         if (state.account == null) {
             Box(
-                Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF153338), Night)))
+                Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(BackgroundBlue, Night)))
                     .windowInsetsPadding(WindowInsets.safeDrawing).imePadding(),
                 contentAlignment = Alignment.Center,
             ) {
@@ -150,7 +153,7 @@ private fun CameraHud(
             AndroidView(factory = { preview.view }, modifier = Modifier.fillMaxSize())
         }
         if (issue != null) {
-            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF133237), Night))))
+            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(BackgroundBlue, Night))))
         }
         InspectionGraphics(
             hud = hud.takeIf { issue == null },
@@ -174,7 +177,7 @@ private fun CameraHud(
                     stringResource(R.string.demo_mode),
                     Modifier.align(Alignment.TopStart).padding(16.dp).hudPanel()
                         .padding(horizontal = 12.dp, vertical = 6.dp),
-                    color = Cyan,
+                    color = SkyBlue,
                     style = MaterialTheme.typography.labelMedium,
                 )
             }
@@ -263,18 +266,18 @@ private fun MenuHandle(modifier: Modifier, onOpen: () -> Unit) {
             val x = center.x - 2.5.dp.toPx()
             val y = center.y
             val d = 5.dp.toPx()
-            drawLine(Cyan, Offset(x + d, y - d), Offset(x, y), 2.dp.toPx(), StrokeCap.Round)
-            drawLine(Cyan, Offset(x, y), Offset(x + d, y + d), 2.dp.toPx(), StrokeCap.Round)
+            drawLine(SkyBlue, Offset(x + d, y - d), Offset(x, y), 2.dp.toPx(), StrokeCap.Round)
+            drawLine(SkyBlue, Offset(x, y), Offset(x + d, y + d), 2.dp.toPx(), StrokeCap.Round)
         }
     }
 }
 
 internal fun Modifier.hudPanel() = background(Glass, PanelShape)
-    .border(1.dp, Cyan.copy(alpha = 0.34f), PanelShape)
+    .border(1.dp, SkyBlue.copy(alpha = 0.34f), PanelShape)
 
 @Composable
 internal fun PanelTitle(value: String) {
-    Text(value, color = Cyan, style = MaterialTheme.typography.titleMedium)
+    Text(value, color = SkyBlue, style = MaterialTheme.typography.titleMedium)
 }
 
 @Composable
@@ -359,7 +362,7 @@ private fun NodePanel(
 ) {
     Text(
         stringResource(R.string.node_progress, stage.number, stage.total),
-        color = Cyan, style = MaterialTheme.typography.labelMedium,
+        color = SkyBlue, style = MaterialTheme.typography.labelMedium,
     )
     PanelTitle(stage.step.component)
     val result = stage.result
@@ -394,7 +397,7 @@ private fun ReportPanel(stage: InspectionStage.Summary, onAction: (InspectionAct
             stage.report.results.count { it.outcome == StepOutcome.SKIPPED }),
     )
     if (stage.saved) {
-        Text(stringResource(R.string.report_sent), color = Cyan, modifier = Modifier.semantics {
+        Text(stringResource(R.string.report_sent), color = SkyBlue, modifier = Modifier.semantics {
             liveRegion = LiveRegionMode.Polite
         })
         ActionButton(R.string.new_inspection) { onAction(InspectionAction.NewInspection) }
@@ -413,7 +416,13 @@ private fun ReportPanel(stage: InspectionStage.Summary, onAction: (InspectionAct
 
 @Composable
 internal fun ActionButton(label: Int, enabled: Boolean = true, onClick: () -> Unit) {
-    Button(onClick = onClick, enabled = enabled, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp)) {
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(10.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = LogoBlue, contentColor = Color.White),
+    ) {
         Text(stringResource(label))
     }
 }

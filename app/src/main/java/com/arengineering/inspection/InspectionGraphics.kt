@@ -62,13 +62,13 @@ internal fun InspectionGraphics(
                 if (index == 0) contour.moveTo(x, y) else contour.lineTo(x, y)
             }
             contour.close()
-            drawPath(contour, Cyan.copy(alpha = 0.12f))
-            drawPath(contour, Cyan, style = Stroke(2.dp.toPx()))
+            drawPath(contour, SkyBlue.copy(alpha = 0.12f))
+            drawPath(contour, SkyBlue, style = Stroke(2.dp.toPx()))
         }
         overlay.marks.forEach { mark ->
             drawMarker(
                 Offset(mark.point.x * size.width, mark.point.y * size.height),
-                mark.label, textMeasurer, if (mark.warning) Amber else Cyan,
+                mark.label, textMeasurer, if (mark.warning) Amber else SkyBlue,
             )
         }
     }
@@ -84,8 +84,8 @@ private fun DrawScope.drawQrGuide() {
     for (x in listOf(-1f, 1f)) {
         for (y in listOf(-1f, 1f)) {
             val corner = Offset(center.x + x * half, size.height * 0.42f + y * half)
-            drawLine(Cyan, corner, corner - Offset(x * arm, 0f), 2.dp.toPx())
-            drawLine(Cyan, corner, corner - Offset(0f, y * arm), 2.dp.toPx())
+            drawLine(SkyBlue, corner, corner - Offset(x * arm, 0f), 2.dp.toPx())
+            drawLine(SkyBlue, corner, corner - Offset(0f, y * arm), 2.dp.toPx())
         }
     }
 }
@@ -95,7 +95,7 @@ private fun DrawScope.drawScanner() {
     val origin = Offset(center.x - radius, size.height * 0.56f - radius)
     repeat(11) { segment ->
         drawArc(
-            color = Cyan.copy(alpha = if (segment == 5) 0.70f else 0.34f),
+            color = SkyBlue.copy(alpha = if (segment == 5) 0.70f else 0.34f),
             startAngle = 35f + segment * 10f,
             sweepAngle = 6f,
             useCenter = false,
