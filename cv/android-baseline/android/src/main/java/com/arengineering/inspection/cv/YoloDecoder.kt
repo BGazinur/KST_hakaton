@@ -111,12 +111,22 @@ class YoloDecoder(
      * Sample centers of the complete RAW FOV directly through the inverse preprocess geometry.
      * No contours/polygon stitching or morphological filling: split components and holes stay in RLE.
      */
-    private fun decodeMask(output: FloatArray,prototypes: FloatArray,detection: Detection,transform: LetterboxTransform): BinaryMaskRle {
+    private fun decodeMask(output: FloatArray,prototypes: FloatArray,detection: Detection,transform: LetterboxTransform): BinaryMaskRle =
+        decodeMask(prototypes, detection.modelBox, transform) { channel ->
+            output[(5+channel)*ANCHORS+detection.sourceIndex]
+        }
+
+    internal fun decodeMask(
+        prototypes: FloatArray,
+        box: Box2,
+        transform: LetterboxTransform,
+        coefficientAt: (Int) -> Float,
+    ): BinaryMaskRle {
         val side = PROTO_SIZE
         val plane = side*side
         val logits = FloatArray(plane)
         for (channel in 0 until MASK_CHANNELS) {
-            val coefficient = output[(5+channel)*ANCHORS+detection.sourceIndex]
+            val coefficient = coefficientAt(channel)
             require(coefficient.isFinite()) { "Non-finite mask coefficient" }
             if (coefficient == 0f) continue
             val offset = channel*plane
@@ -127,7 +137,6 @@ class YoloDecoder(
         val width = round(transform.rawWidth*scale).toInt().coerceAtLeast(1)
         val height = round(transform.rawHeight*scale).toInt().coerceAtLeast(1)
         val binary = BooleanArray(width*height)
-        val box = detection.modelBox
         for (y in 0 until height) {
             for (x in 0 until width) {
                 val model = transform.rawToModel(Point2((x+0.5)/width,(y+0.5)/height))

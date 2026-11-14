@@ -74,3 +74,12 @@ Rust: https://universe.roboflow.com/dgs-bdj8h/rust-2.0-susmh-3apgo/dataset/3
 Ultralytics: https://github.com/ultralytics/ultralytics (AGPL-3.0 / коммерческое
 лицензирование у правообладателя). ONNX Runtime: MIT. ARCore распространяется
 на условиях Google. Фиксация источников не переоформляет все данные/веса в MIT.
+
+Ориентиры ручных шагов
+Модель visual-hint.onnx подготовлена из публичных весов YOLOE-26n.
+Источник: https://github.com/ultralytics/assets/releases/tag/v8.4.0
+Лицензия Ultralytics: https://github.com/ultralytics/ultralytics/blob/main/LICENSE
+Параметры, SHA-256 и распределение классов: contract/visual-hint-manifest.json.
+Скрипт экспорта: evidence/export_visual_hint.py.
+Модель предлагает область осмотра. Инженер записывает результат проверки.
+Веса локального эксперимента и исходные изображения находятся в «Примеры».

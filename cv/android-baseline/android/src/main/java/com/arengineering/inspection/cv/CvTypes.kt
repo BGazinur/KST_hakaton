@@ -90,14 +90,14 @@ data class CvFrame(
     }
 }
 
-enum class CvMode { OVERVIEW, DETAIL_RUST, DETAIL_UNSUPPORTED }
-data class CvRequest(val frame: CvFrame, val mode: CvMode)
+enum class CvMode { OVERVIEW, DETAIL_RUST, DETAIL_UNSUPPORTED, VISUAL_HINT }
+data class CvRequest(val frame: CvFrame, val mode: CvMode, val hint: VisualHint? = null)
 enum class ZoneId(val wireValue: String) { FRAME("frame"), CASING("casing"), TERMINAL_BOX("terminal_box") }
 enum class DefectType(val wireValue: String) { CORROSION("corrosion") }
 enum class CvStatus {
     EQUIPMENT_FOUND, EQUIPMENT_NOT_FOUND, DEFECT_CANDIDATE,
     /** Absence of a model hypothesis is not a healthy classification. */
-    NO_DEFECT_DETECTED, UNSUPPORTED_DETAIL, AMBIGUOUS
+    NO_DEFECT_DETECTED, UNSUPPORTED_DETAIL, AMBIGUOUS, HINT_FOUND, HINT_NOT_FOUND
 }
 
 /** Binary RLE, row-major, zero-start counts. Includes the whole raw-image FOV, including zeros. */
@@ -165,7 +165,8 @@ data class CvResult(
     val schemaVersion: Int = 1,
     val timings: CvTimings = CvTimings(),
     val modelManifestVersion: String = "pump-cv-1",
-    val mode: CvMode = CvMode.OVERVIEW
+    val mode: CvMode = CvMode.OVERVIEW,
+    val visualHints: List<VisualHintRegion> = emptyList(),
 ) {
     init { require(stamp == geometry.stamp) { "Result geometry and source stamp differ" } }
 }

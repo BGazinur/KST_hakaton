@@ -1,0 +1,25 @@
+{
+  "id": "visual-hint-26n-1",
+  "status": "experimental, opt-in",
+  "assetPath": "cv/visual-hint.onnx",
+  "sha256": "ffd177a642315c50aa9df296f07fa38486e40989e09a3d8ac987f55b0c8386bc",
+  "bytes": 10997657,
+  "license": "AGPL-3.0-or-later",
+  "upstream": "https://github.com/ultralytics/assets/releases/download/v8.4.0/yoloe-26n-seg.pt",
+  "upstreamSha256": "1741c1f8da3cea47e2c01829c334a50dc0b9bbd05e685b90a3ce84fae32c8c1b",
+  "runtime": "onnxruntime-android:1.23.2",
+  "opset": 17,
+  "dtype": "float32",
+  "input": {"images": [1, 3, 416, 416]},
+  "outputs": {"output0": [1, 300, 38], "output1": [1, 32, 104, 104]},
+  "output0Columns": "x1, y1, x2, y2, score, class index, 32 mask coefficients",
+  "labels": [
+    "wet oil stain", "liquid puddle", "shaft coupling guard", "frayed electrical cable",
+    "exposed copper wire", "motor cooling fins", "green yellow ground wire", "discolored metal"
+  ],
+  "minimumScore": 0.35,
+  "classIndicesByHint": {
+    "shaft_leak": [0, 1], "coupling_guard": [2], "motor_cable": [3, 4],
+    "motor_fins": [5], "motor_ground": [6], "motor_discoloration": [7]
+  }
+}

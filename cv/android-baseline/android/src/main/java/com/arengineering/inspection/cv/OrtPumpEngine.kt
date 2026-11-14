@@ -2,11 +2,14 @@ package com.arengineering.inspection.cv
 
 import ai.onnxruntime.OnnxJavaType
 import ai.onnxruntime.OnnxTensor
+import ai.onnxruntime.OrtException
 import ai.onnxruntime.OrtEnvironment
 import ai.onnxruntime.OrtSession
 import ai.onnxruntime.TensorInfo
 import java.nio.FloatBuffer
+import java.io.FileNotFoundException
 import java.security.MessageDigest
+import java.util.logging.Logger
 
 /**
  * Synchronous CPU inference. Construct, analyze and close on the same dedicated worker.
@@ -18,44 +21,18 @@ import java.security.MessageDigest
  * These are visual hypotheses, never an automatic diagnosis or a certificate of health.
  */
 class OrtPumpEngine(
-    modelLoader: (String) -> ByteArray,
-    threads: Int = 2,
+    private val modelLoader: (String) -> ByteArray,
+    private val threads: Int = 2,
 ) : AutoCloseable {
     private val ownerThread = Thread.currentThread()
     // ORT's process-wide environment is shared; sessions and per-call tensors are owned here.
     private val environment = OrtEnvironment.getEnvironment()
     private val decoder = YoloDecoder()
-    private val sessions: Map<String, OrtSession>
+    private val sessions = linkedMapOf<String, OrtSession>()
+    private val pilot by lazy { loadPilotSession() }
     private var closed = false
 
-    init {
-        require(threads in 1..16) { "Choose a bounded CPU thread count" }
-        val opened = linkedMapOf<String, OrtSession>()
-        try {
-            for (spec in MODEL_SPECS) {
-                val bytes = modelLoader(spec.assetPath)
-                require(sha256(bytes) == spec.sha256) {
-                    "Model SHA-256 mismatch: ${spec.assetPath}; use the pinned manifest"
-                }
-                val session = OrtSession.SessionOptions().use { options ->
-                    options.setIntraOpNumThreads(threads)
-                    options.setInterOpNumThreads(1)
-                    options.setExecutionMode(OrtSession.SessionOptions.ExecutionMode.SEQUENTIAL)
-                    options.setOptimizationLevel(OrtSession.SessionOptions.OptLevel.ALL_OPT)
-                    // No accelerator EP is registered: portable CPU baseline first.
-                    environment.createSession(bytes, options)
-                }
-                opened[spec.id] = session
-                validateModel(session, spec)
-            }
-            sessions = opened.toMap()
-        } catch (failure: Throwable) {
-            for (session in opened.values.toList().asReversed()) {
-                try { session.close() } catch (closeFailure: Throwable) { failure.addSuppressed(closeFailure) }
-            }
-            throw failure
-        }
-    }
+    init { require(threads in 1..16) { "Choose a bounded CPU thread count" } }
 
     fun analyze(request: CvRequest): CvResult {
         checkOwner()
@@ -75,6 +52,16 @@ class OrtPumpEngine(
                 mode = request.mode,
             )
         }
+        if (request.mode == CvMode.VISUAL_HINT && request.hint == VisualHint.GROUND) {
+            val start = System.nanoTime()
+            locateGroundWireCue(frame)?.let { region ->
+                return CvResult(
+                    stamp = stamp, geometry = geometry, status = CvStatus.HINT_FOUND,
+                    timings = CvTimings(inferenceMs = elapsedMs(start)),
+                    modelManifestVersion = "ground-wire-color-1", mode = request.mode, visualHints = listOf(region),
+                )
+            }
+        }
 
         val preprocessStart = System.nanoTime()
         val prepared = ImagePreprocessor.prepare(
@@ -91,6 +78,8 @@ class OrtPumpEngine(
                     "pump-pose" to runCopied("pump-pose", input),
                 )
                 CvMode.DETAIL_RUST -> mapOf("corrosion" to runCopied("corrosion", input))
+                CvMode.VISUAL_HINT -> pilot?.let { mapOf(PILOT_ID to readOutputs(it, PILOT_OUTPUTS, input)) }
+                    ?: mapOf(HINT_SPEC.id to runCopied(HINT_SPEC.id, input))
                 CvMode.DETAIL_UNSUPPORTED -> error("Unsupported mode handled before inference")
             }
         }
@@ -99,6 +88,7 @@ class OrtPumpEngine(
         val equipment: List<EquipmentHypothesis>
         val zones: List<ZoneCandidate>
         val defects: List<DefectHypothesis>
+        var visualHints = emptyList<VisualHintRegion>()
         val status: CvStatus
         if (request.mode == CvMode.OVERVIEW) {
             val segmentation = raw.getValue("pump-seg")
@@ -118,7 +108,7 @@ class OrtPumpEngine(
                 1 -> CvStatus.EQUIPMENT_FOUND
                 else -> CvStatus.AMBIGUOUS
             }
-        } else {
+        } else if (request.mode == CvMode.DETAIL_RUST) {
             equipment = emptyList()
             zones = emptyList()
             val segmentation = raw.getValue("corrosion")
@@ -130,6 +120,21 @@ class OrtPumpEngine(
                 }
             // Empty output means no candidate at this threshold, NEVER "equipment is healthy".
             status = if (defects.isEmpty()) CvStatus.NO_DEFECT_DETECTED else CvStatus.DEFECT_CANDIDATE
+        } else {
+            equipment = emptyList()
+            zones = emptyList()
+            defects = emptyList()
+            val hint = requireNotNull(request.hint)
+            val outputs = raw.values.single()
+            val candidate = if (PILOT_ID in raw) decodePilotHint(outputs.single(), prepared.transform, hint)
+                else decoder.decodeVisualHint(outputs[0], outputs[1], prepared.transform, hint)
+            visualHints = candidate?.let { region ->
+                region.mask?.let { mask ->
+                    clipToCrop(region.bbox, mask, frame)?.let { (box, clipped) -> region.copy(bbox = box, mask = clipped) }
+                } ?: clipBoxToCrop(region.bbox, frame).takeIf { region.mask == null && it.area > 0.0 }
+                    ?.let { box -> region.copy(bbox = box) }
+            }?.let(::listOf).orEmpty()
+            status = if (visualHints.isEmpty()) CvStatus.HINT_NOT_FOUND else CvStatus.HINT_FOUND
         }
         return CvResult(
             stamp = stamp,
@@ -139,25 +144,70 @@ class OrtPumpEngine(
             defects = defects,
             status = status,
             timings = CvTimings(preprocessMs, inferenceMs, elapsedMs(decodeStart)),
-            modelManifestVersion = MODEL_MANIFEST_VERSION,
+            modelManifestVersion = if (PILOT_ID in raw) PILOT_ID else MODEL_MANIFEST_VERSION,
             mode = request.mode,
+            visualHints = visualHints,
         )
     }
 
     /** Returned FloatArrays are copies and remain valid after native Result/tensors close. */
     private fun runCopied(id: String, input: OnnxTensor): List<FloatArray> {
-        val spec = MODEL_SPECS.first { it.id == id }
-        return sessions.getValue(id).run(mapOf("images" to input)).use { result ->
-            spec.outputs.mapIndexed { index, expected ->
-                val tensor = result[index] as? OnnxTensor ?: error("$id output $index is not a tensor")
-                validateTensor(tensor.info, expected.shape, "$id runtime output $index")
-                val buffer = tensor.floatBuffer ?: error("$id output $index has no float buffer")
+        val spec = if (id == HINT_SPEC.id) HINT_SPEC else MODEL_SPECS.first { it.id == id }
+        val session = sessions.getOrPut(id) { openSession(spec) }
+        return readOutputs(session, spec.outputs, input)
+    }
+
+    private fun readOutputs(session: OrtSession, outputs: List<OutputSpec>, input: OnnxTensor): List<FloatArray> =
+        session.run(mapOf("images" to input)).use { result ->
+            outputs.mapIndexed { index, expected ->
+                val tensor = result[index] as? OnnxTensor ?: error("Output $index is not a tensor")
+                validateTensor(tensor.info, expected.shape, "Runtime output $index")
+                val buffer = tensor.floatBuffer ?: error("Output $index has no float buffer")
                 val size = expected.shape.fold(1L) { a, b -> a * b }.toInt()
-                check(buffer.remaining() == size) { "$id output $index has an unexpected number of elements" }
+                check(buffer.remaining() == size) { "Output $index has an unexpected number of elements" }
                 FloatArray(size).also { buffer.get(it) }
             }
         }
+
+    private fun openSession(spec: ModelSpec): OrtSession {
+        val bytes = modelLoader(spec.assetPath)
+        require(sha256(bytes) == spec.sha256) { "Model SHA-256 mismatch: ${spec.assetPath}" }
+        return openSession(spec, bytes)
     }
+
+    private fun openSession(spec: ModelSpec, bytes: ByteArray): OrtSession {
+        val opened = OrtSession.SessionOptions().use { options ->
+            options.setIntraOpNumThreads(threads)
+            options.setInterOpNumThreads(1)
+            options.setExecutionMode(OrtSession.SessionOptions.ExecutionMode.SEQUENTIAL)
+            options.setOptimizationLevel(OrtSession.SessionOptions.OptLevel.ALL_OPT)
+            environment.createSession(bytes, options)
+        }
+        try {
+            validateModel(opened, spec)
+        } catch (failure: Throwable) {
+            try { opened.close() } catch (closeFailure: Throwable) { failure.addSuppressed(closeFailure) }
+            throw failure
+        }
+        return opened
+    }
+
+    private fun loadPilotSession(): OrtSession? {
+        return try {
+            openSession(PILOT_SPEC, modelLoader(PILOT_SPEC.assetPath)).also { sessions[PILOT_ID] = it }
+        } catch (_: FileNotFoundException) {
+            null
+        } catch (error: OrtException) {
+            logPilotUnavailable(error)
+            null
+        } catch (error: IllegalArgumentException) {
+            logPilotUnavailable(error)
+            null
+        }
+    }
+
+    private fun logPilotUnavailable(error: Exception) =
+        Logger.getLogger("InspectionCV").warning("Local inspection model unavailable: ${error.javaClass.simpleName}")
 
     private fun validateModel(session: OrtSession, spec: ModelSpec) {
         require(session.inputNames == setOf("images")) { "${spec.id}: unexpected model inputs" }
@@ -179,17 +229,21 @@ class OrtPumpEngine(
         return x >= crop.left && x < crop.right && y >= crop.top && y < crop.bottom
     }
 
-    /** Never surface detections inferred exclusively from the synthetic padding outside Image.cropRect. */
-    private fun clipToCrop(box: Box2, mask: BinaryMaskRle, frame: CvFrame): Pair<Box2, BinaryMaskRle>? {
+    private fun clipBoxToCrop(box: Box2, frame: CvFrame): Box2 {
         val width = frame.geometry.stamp.imageWidth
         val height = frame.geometry.stamp.imageHeight
         val crop = frame.validCrop
-        val clipped = Box2(
+        return Box2(
             maxOf(box.left, crop.left.toDouble() / width),
             maxOf(box.top, crop.top.toDouble() / height),
             minOf(box.right, crop.right.toDouble() / width),
             minOf(box.bottom, crop.bottom.toDouble() / height),
         )
+    }
+
+    /** Never surface detections inferred exclusively from the synthetic padding outside Image.cropRect. */
+    private fun clipToCrop(box: Box2, mask: BinaryMaskRle, frame: CvFrame): Pair<Box2, BinaryMaskRle>? {
+        val clipped = clipBoxToCrop(box, frame)
         if (clipped.area <= 0.0) return null
         val pixels = mask.decode()
         var nonempty = false
@@ -235,6 +289,14 @@ class OrtPumpEngine(
         const val ORT_VERSION = "1.23.2"
         const val MODEL_MANIFEST_VERSION = "pump-cv-1"
         const val MIN_EQUIPMENT_AREA = 0.035
+        private const val PILOT_ID = "visual-hint-local-pilot"
+        private val PILOT_OUTPUTS = listOf(OutputSpec("output0", listOf(1L, 300L, 6L)))
+        private val PILOT_SPEC = ModelSpec(PILOT_ID, "cv/visual-hint-local.onnx", "", PILOT_OUTPUTS)
+        private val HINT_SPEC = ModelSpec(
+            "visual-hint", "cv/visual-hint.onnx",
+            "ffd177a642315c50aa9df296f07fa38486e40989e09a3d8ac987f55b0c8386bc",
+            listOf(OutputSpec("output0", listOf(1L, 300L, 38L)), OutputSpec("output1", listOf(1L, 32L, 104L, 104L))),
+        )
         private val SEG_OUTPUTS = listOf(
             OutputSpec("output0", listOf(1L, 37L, 3549L)),
             OutputSpec("output1", listOf(1L, 32L, 104L, 104L)),

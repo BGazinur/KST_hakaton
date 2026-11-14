@@ -17,7 +17,11 @@ object CvResultJson {
             "preprocessMs" to number(result.timings.preprocessMs),
             "inferenceMs" to number(result.timings.inferenceMs),
             "decodeMs" to number(result.timings.decodeMs)
-        )
+        ),
+        *if (result.mode == CvMode.VISUAL_HINT) arrayOf("visualHints" to array(result.visualHints.map { region ->
+            obj("target" to quote(region.target.wireValue), "bbox" to box(region.bbox),
+                "mask" to (region.mask?.let(::mask) ?: "null"))
+        })) else emptyArray(),
     )
 
     private fun stamp(value: FrameStamp): String = obj(

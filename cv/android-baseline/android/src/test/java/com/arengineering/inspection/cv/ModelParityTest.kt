@@ -21,6 +21,59 @@ class ModelParityTest {
     @Test fun pumpRaw270OddDimensions() = verifyFixture("pump270")
     @Test fun rustRaw0OddDimensions() = verifyFixture("rust0")
 
+    @Test fun experimentalHintsUseBundledOnnxAndKeepDefectsSeparate() {
+        val fixture = readFixture("pump90")
+        val directory = modelDirectory()
+        OrtPumpEngine({ path -> File(directory, path.substringAfterLast('/')).readBytes() }).use { engine ->
+            val result = engine.analyze(CvRequest(frame90(fixture), CvMode.VISUAL_HINT, VisualHint.GUARD))
+            assertEquals(CvStatus.HINT_NOT_FOUND, result.status)
+            assertTrue(result.defects.isEmpty())
+            assertTrue(result.visualHints.isEmpty())
+        }
+    }
+
+    @Test fun unusableLocalPilotFallsBackToBundledModel() {
+        val fixture = readFixture("pump90")
+        val directory = modelDirectory()
+        var pilotLoads = 0
+        OrtPumpEngine({ path ->
+            if (path.endsWith("visual-hint-local.onnx")) {
+                pilotLoads++
+                byteArrayOf(1, 2, 3)
+            } else File(directory, path.substringAfterLast('/')).readBytes()
+        }).use { engine ->
+            val request = CvRequest(frame90(fixture), CvMode.VISUAL_HINT, VisualHint.GUARD)
+            repeat(2) { assertEquals("pump-cv-1", engine.analyze(request).modelManifestVersion) }
+            assertEquals(1, pilotLoads)
+        }
+    }
+
+    @Test fun localBuildLoadsThePilotOnnx() {
+        val configuredPath = System.getProperty("cv.localPilot")
+        org.junit.Assume.assumeNotNull(configuredPath)
+        val local = File(checkNotNull(configuredPath))
+        val modelPath = File(local, "cv/visual-hint-local.onnx")
+        assertTrue(modelPath.isFile)
+        val directory = modelDirectory()
+        OrtPumpEngine({ path ->
+            if (path == "cv/visual-hint-local.onnx") modelPath.readBytes()
+            else File(directory, path.substringAfterLast('/')).readBytes()
+        }).use { engine ->
+            val result = engine.analyze(CvRequest(frame90(readFixture("pump90")), CvMode.VISUAL_HINT, VisualHint.GUARD))
+            assertEquals("visual-hint-local-pilot", result.modelManifestVersion)
+            assertTrue(result.defects.isEmpty())
+        }
+    }
+
+    private fun frame90(fixture: Fixture): CvFrame {
+        val width = fixture.int("width")
+        val height = fixture.int("height")
+        val geometry = GeometrySnapshot(FrameStamp("test", 0, 0, 1, 1, width, height),
+            CameraIntrinsics(250.0, 250.0, width / 2.0, height / 2.0),
+            CameraPose(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0), Affine2x3(0.0, -1.0, 1.0, 1.0, 0.0, 0.0))
+        return CvFrame(geometry, fixture.files.getValue("raw.rgb"))
+    }
+
     private data class Fixture(val properties: Properties, val files: Map<String, ByteArray>) {
         fun text(key: String): String = properties.getProperty(key) ?: error("Missing fixture key $key")
         fun int(key: String): Int = text(key).toInt()
@@ -211,10 +264,12 @@ class ModelParityTest {
             result.equipment.forEach { e ->
                 val rawDetection = actualDecodedEquipment.first { it.id == e.id }
                 assertArrayEquals(rawDetection.mask.counts, e.mask.counts)
+                assertTrue("Pump mask should produce a silhouette", e.mask.contours().any { it.size > 4 })
             }
             result.defects.forEach { d ->
                 val rawDetection = actualDecodedDefects.first { it.id == d.id }
                 assertArrayEquals(rawDetection.mask.counts, d.mask.counts)
+                assertTrue("Corrosion mask should produce drawable regions", d.mask.contours().isNotEmpty())
             }
             assertTrue(result.timings.preprocessMs >= 0 && result.timings.inferenceMs >= 0 && result.timings.decodeMs >= 0)
             System.getProperty("cv.resultDir")?.let { output ->

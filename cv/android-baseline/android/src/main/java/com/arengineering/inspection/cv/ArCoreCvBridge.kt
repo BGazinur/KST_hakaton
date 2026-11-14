@@ -37,8 +37,11 @@ class ArCoreCvBridge(
     private val analyze: (CvRequest) -> CvResult,
     private val closeAnalyzer: () -> Unit = {},
     private val maxResultAgeNs: Long = 250_000_000L,
+    private val maxCaptureAgeNs: Long = maxResultAgeNs,
+    private val prepareResult: (CvResult) -> Unit = {},
+    private val onAnalyzedFrame: (CvFrame, CvResult) -> Unit = { _, _ -> },
 ) : AutoCloseable {
-    init { require(maxResultAgeNs > 0) }
+    init { require(maxResultAgeNs > 0 && maxCaptureAgeNs >= maxResultAgeNs) }
 
     private val worker = Executors.newSingleThreadExecutor { task -> Thread(task, "pump-cv") }
     private val submitLock = Any()
@@ -54,6 +57,7 @@ class ArCoreCvBridge(
     private var geometryEpoch = Long.MIN_VALUE
     private var inspectionEpoch = Long.MIN_VALUE
     private var mode: CvMode? = null
+    private var hint: VisualHint? = null
     private var reference: Anchor? = null
     private var referenceEpoch = 0L
     private var wasTracking = false
@@ -73,6 +77,7 @@ class ArCoreCvBridge(
         inspectionEpoch: Long,
         mode: CvMode,
         referenceAnchor: Anchor? = null,
+        hint: VisualHint? = null,
     ): Boolean {
         requireGlThread()
         if (closed.get()) return false
@@ -84,10 +89,12 @@ class ArCoreCvBridge(
             lastSubmittedFrame = 0L
             changed = true
         }
-        if (this.geometryEpoch != geometryEpoch || this.inspectionEpoch != inspectionEpoch || this.mode != mode) changed = true
+        if (this.geometryEpoch != geometryEpoch || this.inspectionEpoch != inspectionEpoch ||
+            this.mode != mode || this.hint != hint) changed = true
         this.geometryEpoch = geometryEpoch
         this.inspectionEpoch = inspectionEpoch
         this.mode = mode
+        this.hint = hint
         if (reference !== referenceAnchor) {
             reference = referenceAnchor
             referenceEpoch++
@@ -114,12 +121,9 @@ class ArCoreCvBridge(
             val cameraInReference: Pose?
             try {
                 imageTimestamp = image.timestamp
-                // Frame.timestamp has an unspecified clock base. Equality links Image to Frame;
-                // age is measured exclusively by elapsedRealtimeNanos at acquisition.
-                if (imageTimestamp != frame.timestamp) {
-                    failure.set("TimestampMismatch: CPU image does not match its AR frame")
-                    return releaseUnscheduled()
-                }
+                // acquireCameraImage() returns the image for this Frame. Keep the image
+                // timestamp as metadata; equality across the device's timestamp sources
+                // is not required for correlation within this call.
                 val camera = frame.camera
                 val intrinsics = camera.imageIntrinsics
                 val dimensions = intrinsics.imageDimensions
@@ -162,13 +166,16 @@ class ArCoreCvBridge(
                 worker.execute {
                     try {
                         if (token != generation.get() || closed.get()) return@execute
-                        val rgb = pixels.toRgb()
-                        val result = analyze(CvRequest(CvFrame(snapshot, rgb, pixels.validCrop), mode))
+                        val source = CvFrame(snapshot, pixels.toRgb(), pixels.validCrop)
+                        val result = analyze(CvRequest(source, mode, hint))
                         require(result.stamp == snapshot.stamp && result.geometry == snapshot && result.mode == mode) {
                             "Analyzer changed source geometry or inspection mode"
                         }
+                        prepareResult(result)
+                        if (token == generation.get() && !closed.get()) onAnalyzedFrame(source, result)
                         val capture = CapturedCvResult(
-                            result, imageTimestamp, pixels.validCrop, ownerToken, token, capturedReferenceEpoch, cameraInReference,
+                            result, imageTimestamp, pixels.validCrop, ownerToken, token, capturedReferenceEpoch,
+                            cameraInReference, SystemClock.elapsedRealtimeNanos(),
                         )
                         if (!closed.get() && isFresh(capture)) latest.set(capture)
                     } catch (error: Exception) {
@@ -253,6 +260,7 @@ class ArCoreCvBridge(
     fun invalidate() {
         generation.incrementAndGet()
         latest.set(null)
+        failure.set(null)
     }
 
     fun takeFailure(): String? = failure.getAndSet(null)
@@ -334,8 +342,10 @@ class ArCoreCvBridge(
     }
 
     private fun isFresh(capture: CapturedCvResult): Boolean {
-        val age = SystemClock.elapsedRealtimeNanos() - capture.result.stamp.acquiredElapsedNs
-        return capture.ownerToken === ownerToken && capture.generation == generation.get() && age in 0..maxResultAgeNs
+        val now = SystemClock.elapsedRealtimeNanos()
+        return capture.ownerToken === ownerToken && capture.generation == generation.get() &&
+            now - capture.completedElapsedNs in 0..maxResultAgeNs &&
+            now - capture.result.stamp.acquiredElapsedNs in 0..maxCaptureAgeNs
     }
 
     private fun releaseUnscheduled(): Boolean {
@@ -382,6 +392,7 @@ class CapturedCvResult internal constructor(
     internal val generation: Long,
     internal val referenceEpoch: Long,
     internal val cameraInReference: Pose?,
+    val completedElapsedNs: Long,
 )
 
 sealed interface AnchorProposal {

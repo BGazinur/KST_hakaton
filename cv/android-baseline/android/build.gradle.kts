@@ -16,7 +16,21 @@ android {
             it.systemProperty("cv.modelDir", project.file("src/main/assets/cv").absolutePath)
             it.systemProperty("cv.fixtures.dir", project.file("src/test/resources/parity").absolutePath)
             it.maxHeapSize = "2g"
+            providers.gradleProperty("cvLocalHoldout").orNull?.let { folder ->
+                it.systemProperty("cv.localHoldout", rootProject.file(folder).absolutePath)
+            }
+            if (providers.gradleProperty("cvLocalPilot").orNull == "true") {
+                it.systemProperty("cv.localPilot", rootProject.file("Примеры/.cv-local/android-assets").absolutePath)
+            }
         }
+    }
+}
+
+if (providers.gradleProperty("cvLocalPilot").orNull == "true") {
+    val localAssets = rootProject.layout.projectDirectory.dir("Примеры/.cv-local/android-assets")
+    check(localAssets.file("cv/visual-hint-local.onnx").asFile.isFile) { "Missing local CV pilot weights" }
+    androidComponents.onVariants(androidComponents.selector().withBuildType("debug")) { variant ->
+        variant.sources.assets?.addStaticSourceDirectory(localAssets.asFile.absolutePath)
     }
 }
 
